@@ -202,10 +202,10 @@
                                     <option value="">Selecione a categoria</option>
                                     {% for categoria in categorias %}
                                         <option
-                                            value="{{ categoria.id }}"
-                                            data-tipo="{{ categoria.tipo }}"
+                                            value="{{ categoria.id if categoria.id is defined else categoria['id'] }}"
+                                            data-tipo="{{ categoria.tipo if categoria.tipo is defined else categoria['tipo'] }}"
                                         >
-                                            {{ categoria.nome }}
+                                            {{ categoria.nome if categoria.nome is defined else categoria['nome'] }}
                                         </option>
                                     {% endfor %}
                                 </select>
@@ -256,7 +256,7 @@
                                             <div class="transacao-info">
                                                 <p class="transacao-descricao">{{ t["descricao"] }}</p>
                                                 <small>
-                                                    {{ t["categoria"] if t["categoria"] else "Sem categoria" }}
+                                                    {{ t["categoria_nome"] or "Sem categoria" }}
                                                     •
                                                     {{ t["data"].strftime('%d/%m/%Y') if t["data"] else "" }}
                                                 </small>
@@ -298,12 +298,15 @@
                                                         <select name="categoria_id">
                                                             <option value="">Selecione a categoria</option>
                                                             {% for categoria in categorias %}
+                                                                {% set categoria_id_atual = categoria.id if categoria.id is defined else categoria['id'] %}
+                                                                {% set categoria_nome_atual = categoria.nome if categoria.nome is defined else categoria['nome'] %}
+                                                                {% set categoria_tipo_atual = categoria.tipo if categoria.tipo is defined else categoria['tipo'] %}
                                                                 <option
-                                                                    value="{{ categoria.id }}"
-                                                                    data-tipo="{{ categoria.tipo }}"
-                                                                    {% if t["categoria_id"] == categoria.id %}selected{% endif %}
+                                                                    value="{{ categoria_id_atual }}"
+                                                                    data-tipo="{{ categoria_tipo_atual }}"
+                                                                    {% if t["categoria_id"] == categoria_id_atual %}selected{% endif %}
                                                                 >
-                                                                    {{ categoria.nome }}
+                                                                    {{ categoria_nome_atual }}
                                                                 </option>
                                                             {% endfor %}
                                                         </select>
