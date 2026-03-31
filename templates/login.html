@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Entrar - Grana Simples</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body class="login-page">
+
+<div class="login-container">
+
+    <h1>Entrar</h1>
+    <p>Acesse sua conta para continuar</p>
+
+    {% if erro %}
+        <div class="toast toast-erro">{{ erro }}</div>
+    {% endif %}
+
+    <form method="POST" action="/login">
+        <input type='hidden' name="csrf_token" value="{{ csrf_token() }}">
+       
+        <input type="email" name="email" placeholder="Seu email" required>
+        <input type="password" name="senha" placeholder="Sua senha" required>
+
+        <button type="submit" class="btn">Entrar</button>
+    </form>
+
+    <p class="auth-footer">
+        Não tem conta?
+        <a href="/register">Criar conta</a>
+    </p>
+
+</div>
+
+</body>
+</html>
