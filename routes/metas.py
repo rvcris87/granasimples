@@ -1,3 +1,9 @@
+from flask import Blueprint, request, redirect, url_for, session
+from decorators import login_required
+from db import conectar
+
+metas_bp = Blueprint("metas", __name__)
+
 @metas_bp.route("/editar_meta/<int:meta_id>", methods=["POST"])
 @login_required
 def editar_meta(meta_id):
