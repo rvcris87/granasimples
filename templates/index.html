@@ -43,9 +43,11 @@
 
 {% with mensagens = get_flashed_messages(with_categories=true) %}
   {% if mensagens %}
-    {% for categoria, mensagem in mensagens %}
-      <div class="toast toast-{{ categoria }}">{{ mensagem }}</div>
-    {% endfor %}
+    <div class="toast-container" aria-live="polite" aria-atomic="true">
+      {% for categoria, mensagem in mensagens %}
+        <div class="toast toast-{{ categoria }}">{{ mensagem }}</div>
+      {% endfor %}
+    </div>
   {% endif %}
 {% endwith %}
 
@@ -91,7 +93,7 @@
 
     <form method="POST" action="{{ url_for('categorias.add_categoria') }}">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-        <input type="text" name="nome" placeholder="Nome da categoria" required>
+        <input type="text" name="nome" placeholder="Nome da categoria" minlength="2" required>
 
         <select name="tipo" required>
             <option value="">Tipo</option>
@@ -101,6 +103,36 @@
 
         <button class="btn">Salvar</button>
     </form>
+
+    {% if categorias %}
+    <div class="lista-categorias">
+        {% for c in categorias %}
+        <details class="categoria-item">
+            <summary>
+                <span>{{ c.nome }}</span>
+                <small>{{ "Entrada" if c.tipo == "entrada" else "Saída" }}</small>
+            </summary>
+
+            <form method="POST" action="{{ url_for('categorias.editar_categoria', categoria_id=c.id) }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="text" name="nome" value="{{ c.nome }}" minlength="2" required>
+
+                <select name="tipo" required>
+                    <option value="entrada" {% if c.tipo == "entrada" %}selected{% endif %}>Entrada</option>
+                    <option value="saida" {% if c.tipo == "saida" %}selected{% endif %}>Saída</option>
+                </select>
+
+                <button class="btn" type="submit">Salvar alterações</button>
+            </form>
+
+            <form method="POST" action="{{ url_for('categorias.excluir_categoria', categoria_id=c.id) }}" class="form-excluir-categoria">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit" class="btn-link-perigo" onclick="return confirm('Excluir esta categoria? Só será possível se ela não estiver em uso.')">Excluir categoria</button>
+            </form>
+        </details>
+        {% endfor %}
+    </div>
+    {% endif %}
 </section>
 
 <!-- NOVA TRANSACAO -->
@@ -111,7 +143,7 @@
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
         <input type="text" name="descricao" placeholder="Descrição" required>
-        <input type="number" step="0.01" name="valor" placeholder="Valor" required>
+        <input type="number" step="0.01" min="0.01" name="valor" placeholder="Valor" required>
 
         <select name="tipo" id="tipo" required>
             <option value="">Tipo</option>
@@ -122,7 +154,7 @@
         <select name="categoria_id" id="categoria_id">
             <option value="">Categoria</option>
             {% for c in categorias %}
-            <option value="{{ c.id }}">{{ c.nome }}</option>
+            <option value="{{ c.id }}" data-tipo="{{ c.tipo }}">{{ c.nome }}</option>
             {% endfor %}
         </select>
 
@@ -180,14 +212,30 @@
         const canvasResumo = document.getElementById("graficoResumo");
         const canvasCategorias = document.getElementById("graficoCategorias");
 
+        function mostrarAvisoGrafico(canvas, mensagem) {
+            if (!canvas || !canvas.parentElement) return;
+            canvas.style.display = "none";
+            const aviso = document.createElement("p");
+            aviso.className = "grafico-aviso";
+            aviso.textContent = mensagem;
+            canvas.parentElement.appendChild(aviso);
+        }
+
+        if (typeof Chart === "undefined") {
+            mostrarAvisoGrafico(canvasResumo, "Não foi possível carregar os gráficos agora.");
+            mostrarAvisoGrafico(canvasCategorias, "Não foi possível carregar os gráficos agora.");
+            return;
+        }
+
         if (canvasResumo) {
+            const resumoSemDados = totalEntradas === 0 && totalSaidas === 0;
             new Chart(canvasResumo, {
                 type: "doughnut",
                 data: {
-                    labels: ["Entradas", "Saídas"],
+                    labels: resumoSemDados ? ["Sem dados"] : ["Entradas", "Saídas"],
                     datasets: [{
-                        data: [totalEntradas, totalSaidas],
-                        backgroundColor: ["#3ecf8e", "#f87171"],
+                        data: resumoSemDados ? [1] : [totalEntradas, totalSaidas],
+                        backgroundColor: resumoSemDados ? ["#374151"] : ["#3ecf8e", "#f87171"],
                         borderWidth: 0,
                         hoverOffset: 10
                     }]
@@ -334,12 +382,11 @@
             barra.style.width = largura + "%";
         });
 
-        const toast = document.getElementById("toastMensagem");
-        if (toast) {
+        document.querySelectorAll(".toast").forEach((toast) => {
             setTimeout(() => {
                 toast.classList.add("toast-esconder");
             }, 2600);
-        }
+        });
     });
 </script>
 
@@ -431,18 +478,50 @@
     {% if transacoes %}
         {% for t in transacoes %}
         <div class="transacao-item">
-            <div>
-                <p>{{ t.descricao or "Sem descrição" }}</p>
+            <div class="transacao-info">
+                <p class="transacao-descricao">{{ t.descricao or "Sem descrição" }}</p>
                 <small>
                     {{ t.categoria_nome or "Sem categoria" }} •
                     {% if t.data %}{{ t.data.strftime('%d/%m/%Y') }}{% else %}Data desconhecida{% endif %}
                 </small>
             </div>
 
-            <strong>
-                {% if t.tipo == "entrada" %}+{% else %}-{% endif %}
-                R$ {{ "%.2f"|format(t.valor or 0) }}
-            </strong>
+            <div class="transacao-lado-direito">
+                <strong class="{% if t.tipo == 'entrada' %}entrada{% else %}saida{% endif %}">
+                    {% if t.tipo == "entrada" %}+{% else %}-{% endif %}
+                    R$ {{ "%.2f"|format(t.valor or 0) }}
+                </strong>
+
+                <details class="editar-transacao">
+                    <summary>Editar</summary>
+
+                    <form method="POST" action="{{ url_for('transacoes.editar_transacao', transacao_id=t.id) }}">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <input type="text" name="descricao" value="{{ t.descricao or '' }}" placeholder="Descrição" required>
+                        <input type="number" step="0.01" min="0.01" name="valor" value="{{ t.valor or 0 }}" placeholder="Valor" required>
+
+                        <select name="tipo" required>
+                            <option value="entrada" {% if t.tipo == "entrada" %}selected{% endif %}>Entrada</option>
+                            <option value="saida" {% if t.tipo == "saida" %}selected{% endif %}>Saída</option>
+                        </select>
+
+                        <select name="categoria_id">
+                            <option value="">Categoria</option>
+                            {% for c in categorias %}
+                            <option value="{{ c.id }}" data-tipo="{{ c.tipo }}" {% if t.categoria_id == c.id %}selected{% endif %}>{{ c.nome }}</option>
+                            {% endfor %}
+                        </select>
+
+                        <input type="date" name="data" value="{{ t.data.strftime('%Y-%m-%d') if t.data else '' }}" required>
+                        <button type="submit" class="btn">Salvar alterações</button>
+                    </form>
+                </details>
+
+                <form method="POST" action="{{ url_for('transacoes.excluir_transacao', transacao_id=t.id) }}" class="form-excluir-transacao">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="btn-link-perigo" onclick="return confirm('Excluir esta transação?')">Excluir</button>
+                </form>
+            </div>
         </div>
         {% endfor %}
     {% else %}
@@ -542,7 +621,7 @@
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <div class="form-grupo">
             <input name="titulo" placeholder="Nome da meta" required>
-            <input name="valor_meta" type="number" step="0.01" placeholder="Valor alvo" required>
+            <input name="valor_meta" type="number" step="0.01" min="0.01" placeholder="Valor alvo" required>
             <button class="btn" type="submit">Criar Meta</button>
         </div>
     </form>
@@ -579,7 +658,7 @@
                             <input type="text" name="titulo" value="{{ m.titulo or '' }}" placeholder="Nome da meta" required>
                         </div>
                         <div class="modal-form-group">
-                            <input type="number" name="valor_meta" step="0.01" value="{{ valor_meta }}" placeholder="Valor alvo" required>
+                            <input type="number" name="valor_meta" step="0.01" min="0.01" value="{{ valor_meta }}" placeholder="Valor alvo" required>
                         </div>
                         <div class="modal-form-group modal-buttons">
                             <button type="submit" class="btn btn-salvar">Salvar</button>
@@ -601,13 +680,13 @@
             <div class="meta-acoes-linha">
                 <form method="POST" action="{{ url_for('metas.adicionar_valor_meta', meta_id=m.id) }}" class="meta-form-inline">
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                    <input name="valor_adicionar" type="number" step="0.01" placeholder="Adicionar" required>
+                    <input name="valor_adicionar" type="number" step="0.01" min="0.01" placeholder="Adicionar" required>
                     <button class="btn-mini btn-adicionar" type="submit">+</button>
                 </form>
 
                 <form method="POST" action="{{ url_for('metas.retirar_valor_meta', meta_id=m.id) }}" class="meta-form-inline">
                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                    <input name="valor_retirar" type="number" step="0.01" placeholder="Retirar" required>
+                    <input name="valor_retirar" type="number" step="0.01" min="0.01" placeholder="Retirar" required>
                     <button class="btn-mini btn-retirar" type="submit">−</button>
                 </form>
             </div>
@@ -635,6 +714,13 @@
     const canvasTendencia = document.getElementById("graficoTendencia");
 
     if (dadosTendencia && canvasTendencia) {
+        if (typeof Chart === "undefined") {
+            canvasTendencia.style.display = "none";
+            const aviso = document.createElement("p");
+            aviso.className = "grafico-aviso";
+            aviso.textContent = "Não foi possível carregar o gráfico de tendência agora.";
+            canvasTendencia.parentElement.appendChild(aviso);
+        } else {
         let tendenciaLabels = [];
         let tendenciaEntradas = [];
         let tendenciaSaidas = [];
@@ -727,6 +813,7 @@
                 }
             }
         });
+        }
     }
 </script>
 

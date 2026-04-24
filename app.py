@@ -72,7 +72,12 @@ def erro_500(e):
 
 @app.errorhandler(CSRFError)
 def handle_csrf_error(e):
-    return f"Erro de CSRF: {e.description}", 400
+    return render_template(
+        "erro.html",
+        codigo=400,
+        titulo="Sessão expirada",
+        mensagem="Sua sessão expirou ou o formulário perdeu a validade. Recarregue a página e tente novamente."
+    ), 400
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000, debug=debug_mode)

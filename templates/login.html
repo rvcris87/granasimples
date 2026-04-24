@@ -17,11 +17,21 @@
         <div class="toast toast-erro">{{ erro }}</div>
     {% endif %}
 
-    <form method="POST" action="/login">
+    <form method="POST" action="{{ url_for('auth.login') }}">
         <input type='hidden' name="csrf_token" value="{{ csrf_token() }}">
        
-        <input type="email" name="email" placeholder="Seu email" required>
-        <input type="password" name="senha" placeholder="Sua senha" required>
+        <label class="auth-field">
+            <span>Email</span>
+            <input type="email" name="email" placeholder="seu@email.com" value="{{ email or '' }}" autocomplete="email" required autofocus>
+        </label>
+
+        <label class="auth-field">
+            <span>Senha</span>
+            <div class="password-field">
+                <input type="password" name="senha" placeholder="Sua senha" autocomplete="current-password" required>
+                <button type="button" class="password-toggle" aria-label="Mostrar senha">Mostrar</button>
+            </div>
+        </label>
 
         <button type="submit" class="btn">Entrar</button>
     </form>
@@ -32,6 +42,17 @@
     </p>
 
 </div>
+
+<script>
+    document.querySelectorAll(".password-toggle").forEach((botao) => {
+        botao.addEventListener("click", () => {
+            const campo = botao.parentElement.querySelector("input");
+            const mostrar = campo.type === "password";
+            campo.type = mostrar ? "text" : "password";
+            botao.textContent = mostrar ? "Ocultar" : "Mostrar";
+        });
+    });
+</script>
 
 </body>
 </html>

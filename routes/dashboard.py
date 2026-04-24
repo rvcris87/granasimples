@@ -1,4 +1,6 @@
-from flask import Blueprint, render_template, request, session
+import os
+import logging
+from flask import Blueprint, render_template, request, session, redirect, url_for, abort
 from decorators import login_required
 from utils import (
     calcular_dados_dashboard, 
@@ -8,9 +10,13 @@ from utils import (
     calcular_alertas_metas,
     buscar_gastos_fixos,
     calcular_insights_gastos_fixos,
-    verificar_lancamentos_pendentes
+    verificar_lancamentos_pendentes,
+    parse_mes
 )
 from db import conectar
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 dashboard_bp = Blueprint("dashboard", __name__)
 
@@ -21,74 +27,43 @@ def app_dashboard():
     usuario_id = session["usuario_id"]
     mes = request.args.get("mes", "").strip()
 
+    if mes:
+        try:
+            parse_mes(mes)
+        except ValueError:
+            # Mensagem genérica para o usuário
+            return render_template(
+                "erro.html",
+                codigo=400,
+                titulo="Filtro inválido",
+                mensagem="O filtro de mês fornecido é inválido. Use o seletor de mês."
+            ), 400
+
+    conn = None
     try:
-        dados = calcular_dados_dashboard(usuario_id, mes)
+        conn = conectar()
+        conn.autocommit = True
+
+        dados = calcular_dados_dashboard(usuario_id, mes, conn=conn)
+        categorias = buscar_categorias(usuario_id, conn=conn) or []
+        tendencia = calcular_tendencia_6_meses(usuario_id, conn=conn) or {"labels": [], "entradas": [], "saidas": [], "saldo": []}
+        previsao = calcular_previsao_gastos(usuario_id, conn=conn) or {"valor": 0, "mensagem": ""}
+        alertas_metas = calcular_alertas_metas(usuario_id, conn=conn) or []
+        gastos_fixos = buscar_gastos_fixos(usuario_id, conn=conn) or []
+        insights_gastos_fixos = calcular_insights_gastos_fixos(usuario_id, dados["total_saidas"], conn=conn)
+        lancamentos_pendentes = verificar_lancamentos_pendentes(usuario_id, conn=conn) or {"possui_pendentes": False, "quantidade": 0, "mensagem": ""}
+
     except Exception as e:
-        print(f"Erro em calcular_dados_dashboard: {str(e)}")
-        dados = {
-            "transacoes": [],
-            "metas": [],
-            "total_entradas": 0,
-            "total_saidas": 0,
-            "saldo": 0,
-            "categorias_labels": [],
-            "categorias_valores": [],
-            "insights": ["Erro ao carregar dados. Tente novamente."],
-            "comparacao_percentual": 0,
-            "mensagem_comparacao": "",
-            "maior_categoria": "",
-            "maior_valor": 0,
-            "alertas": []
-        }
-    
-    try:
-        categorias = buscar_categorias(usuario_id) or []
-    except Exception as e:
-        print(f"Erro em buscar_categorias: {str(e)}")
-        categorias = []
-    
-    try:
-        tendencia = calcular_tendencia_6_meses(usuario_id) or {"labels": [], "entradas": [], "saidas": [], "saldo": []}
-    except Exception as e:
-        print(f"Erro em calcular_tendencia_6_meses: {str(e)}")
-        tendencia = {"labels": [], "entradas": [], "saidas": [], "saldo": []}
-    
-    try:
-        previsao = calcular_previsao_gastos(usuario_id) or {"valor": 0, "mensagem": ""}
-    except Exception as e:
-        print(f"Erro em calcular_previsao_gastos: {str(e)}")
-        previsao = {"valor": 0, "mensagem": ""}
-    
-    try:
-        alertas_metas = calcular_alertas_metas(usuario_id) or []
-    except Exception as e:
-        print(f"Erro em calcular_alertas_metas: {str(e)}")
-        alertas_metas = []
-    
-    try:
-        gastos_fixos = buscar_gastos_fixos(usuario_id) or []
-    except Exception as e:
-        print(f"Erro em buscar_gastos_fixos: {str(e)}")
-        gastos_fixos = []
-    
-    try:
-        insights_gastos_fixos = calcular_insights_gastos_fixos(usuario_id, dados["total_saidas"])
-    except Exception as e:
-        print(f"Erro em calcular_insights_gastos_fixos: {str(e)}")
-        insights_gastos_fixos = {
-            "total_gastos_fixos": 0,
-            "quantidade_gastos_fixos": 0,
-            "percentual_gastos_fixos": 0,
-            "maior_categoria_gasto_fixo": "",
-            "mensagem_gastos_fixos": "Erro ao carregar gastos fixos",
-            "alertas_gastos_fixos": []
-        }
-    
-    try:
-        lancamentos_pendentes = verificar_lancamentos_pendentes(usuario_id) or {"possui_pendentes": False, "quantidade": 0, "mensagem": ""}
-    except Exception as e:
-        print(f"Erro em verificar_lancamentos_pendentes: {str(e)}")
-        lancamentos_pendentes = {"possui_pendentes": False, "quantidade": 0, "mensagem": ""}
+        logger.exception(f"Erro ao carregar dashboard para usuário {usuario_id}: {e}")
+        return render_template(
+            "erro.html",
+            codigo=500,
+            titulo="Erro ao carregar dados",
+            mensagem="Não foi possível carregar os dados do dashboard. Tente novamente em alguns instantes."
+        ), 500
+    finally:
+        if conn:
+            conn.close()
 
     return render_template(
         "index.html",
@@ -125,13 +100,21 @@ def app_dashboard():
 
 
 @dashboard_bp.route("/teste-banco")
+@login_required
 def teste_banco():
+    if os.getenv("FLASK_ENV", "").lower() == "production":
+        abort(404)
+
+    conn = None
     try:
         conn = conectar()
         cur = conn.cursor()
         cur.execute("SELECT 1 AS teste")
         resultado = cur.fetchone()
-        conn.close()
         return f"Teste de conexão: {resultado['teste']}"
     except Exception as e:
-        return f"Erro ao conectar ao banco: {str(e)}"
+        logger.exception(f"Erro ao testar conexão: {e}")
+        return "Erro ao conectar ao banco. Verifique os logs.", 500
+    finally:
+        if conn:
+            conn.close()

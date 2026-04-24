@@ -17,11 +17,35 @@
         <div class="toast toast-erro">{{ erro }}</div>
     {% endif %}
 
-    <form method="POST" action="/register">
+    <form method="POST" action="{{ url_for('auth.register') }}">
         <input type='hidden' name="csrf_token" value="{{ csrf_token() }}">
-        <input type="text" name="nome" placeholder="Seu nome" required>
-        <input type="email" name="email" placeholder="Seu email" required>
-        <input type="password" name="senha" placeholder="Crie uma senha" required>
+
+        <label class="auth-field">
+            <span>Nome</span>
+            <input type="text" name="nome" placeholder="Seu nome" value="{{ nome or '' }}" autocomplete="name" required autofocus>
+        </label>
+
+        <label class="auth-field">
+            <span>Email</span>
+            <input type="email" name="email" placeholder="seu@email.com" value="{{ email or '' }}" autocomplete="email" required>
+        </label>
+
+        <label class="auth-field">
+            <span>Senha</span>
+            <div class="password-field">
+                <input type="password" name="senha" placeholder="Crie uma senha" minlength="8" autocomplete="new-password" required>
+                <button type="button" class="password-toggle" aria-label="Mostrar senha">Mostrar</button>
+            </div>
+            <small class="auth-help">Use pelo menos 8 caracteres.</small>
+        </label>
+
+        <label class="auth-field">
+            <span>Confirmar senha</span>
+            <div class="password-field">
+                <input type="password" name="confirmar_senha" placeholder="Digite a senha novamente" minlength="8" autocomplete="new-password" required>
+                <button type="button" class="password-toggle" aria-label="Mostrar senha">Mostrar</button>
+            </div>
+        </label>
 
         <button type="submit" class="btn">Criar conta</button>
     </form>
@@ -32,6 +56,17 @@
     </p>
 
 </div>
+
+<script>
+    document.querySelectorAll(".password-toggle").forEach((botao) => {
+        botao.addEventListener("click", () => {
+            const campo = botao.parentElement.querySelector("input");
+            const mostrar = campo.type === "password";
+            campo.type = mostrar ? "text" : "password";
+            botao.textContent = mostrar ? "Ocultar" : "Mostrar";
+        });
+    });
+</script>
 
 </body>
 </html>
