@@ -1,0 +1,405 @@
+/* ===== ESTILOS PARA A SEÇÃO DE METAS ===== */
+
+.form-criar-meta {
+    margin-bottom: 20px;
+}
+
+.form-grupo {
+    display: grid;
+    grid-template-columns: 2fr 1fr auto;
+    gap: 12px;
+    align-items: flex-end;
+}
+
+.form-grupo input {
+    margin: 0;
+}
+
+.form-grupo .btn {
+    margin: 0;
+    white-space: nowrap;
+}
+
+/* ===== LISTA DE METAS ===== */
+.lista-metas {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.meta-item {
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.04);
+    border-radius: 18px;
+    padding: 18px;
+    transition: all 0.3s ease;
+}
+
+.meta-item:hover {
+    background: rgba(255, 255, 255, 0.04);
+    border-color: rgba(255, 255, 255, 0.08);
+}
+
+.meta-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.meta-header h3 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #f5f5f5;
+    margin: 0;
+}
+
+.meta-badge {
+    display: inline-block;
+    padding: 6px 12px;
+    background: rgba(96, 165, 250, 0.15);
+    border: 1px solid rgba(96, 165, 250, 0.3);
+    border-radius: 12px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #93c5fd;
+    white-space: nowrap;
+}
+
+/* ===== BARRA DE PROGRESSO ===== */
+.barra-meta {
+    width: 100%;
+    height: 12px;
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 10px;
+    overflow: hidden;
+    margin-bottom: 14px;
+}
+
+.progresso-meta {
+    height: 100%;
+    background: linear-gradient(90deg, #16c784, #10b981);
+    border-radius: 10px;
+    transition: width 0.4s ease;
+    box-shadow: 0 0 12px rgba(22, 199, 132, 0.4);
+}
+
+/* ===== AÇÕES EM LINHA ===== */
+.meta-acoes-linha {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+}
+
+.meta-form-inline {
+    display: flex;
+    gap: 8px;
+    align-items: stretch;
+}
+
+.meta-form-inline input {
+    flex: 1;
+    margin: 0;
+    min-height: 38px;
+    padding: 8px 12px;
+    font-size: 0.88rem;
+}
+
+.meta-form-inline input::placeholder {
+    color: #7f8792;
+}
+
+.btn-mini {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 38px;
+    min-height: 38px;
+    padding: 0;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    background: var(--white);
+    color: #111;
+    font-size: 1.1rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+}
+
+.btn-mini:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.btn-mini:active {
+    transform: translateY(0);
+}
+
+.btn-adicionar {
+    background: rgba(22, 199, 132, 0.15);
+    border-color: rgba(22, 199, 132, 0.3);
+    color: #16c784;
+}
+
+.btn-adicionar:hover {
+    background: rgba(22, 199, 132, 0.25);
+    border-color: rgba(22, 199, 132, 0.5);
+}
+
+.btn-retirar {
+    background: rgba(248, 113, 113, 0.15);
+    border-color: rgba(248, 113, 113, 0.3);
+    color: #f87171;
+}
+
+.btn-retirar:hover {
+    background: rgba(248, 113, 113, 0.25);
+    border-color: rgba(248, 113, 113, 0.5);
+}
+
+/* ===== ESTADO VAZIO ===== */
+.vazio {
+    text-align: center;
+    color: #9ca3af;
+    padding: 32px 16px;
+    font-style: italic;
+}
+
+/* ===== MENU DE AÇÕES (EDITAR/EXCLUIR) ===== */
+.meta-header-acoes {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.meta-menu {
+    position: relative;
+}
+
+.meta-menu-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 32px;
+    min-height: 32px;
+    padding: 0;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.05);
+    color: #9ca3af;
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    list-style: none;
+}
+
+.meta-menu-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: #f5f5f5;
+}
+
+.meta-menu-btn::marker {
+    display: none;
+}
+
+.meta-menu-content {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    margin-top: 8px;
+    background: #1d2024;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    min-width: 160px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    z-index: 100;
+    overflow: hidden;
+}
+
+.meta-menu-item {
+    display: block;
+    width: 100%;
+    padding: 10px 14px;
+    border: none;
+    background: transparent;
+    color: #d1d5db;
+    font-size: 0.9rem;
+    text-align: left;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-family: inherit;
+}
+
+.meta-menu-item:hover {
+    background: rgba(255, 255, 255, 0.08);
+    color: #f5f5f5;
+}
+
+.meta-menu-item-delete:hover {
+    background: rgba(248, 113, 113, 0.15);
+    color: #fca5a5;
+}
+
+/* ===== MODAL DE EDIÇÃO ===== */
+.modal-editar {
+    border: none;
+    border-radius: 18px;
+    background: transparent;
+    padding: 0;
+    max-width: 500px;
+    width: 90%;
+}
+
+.modal-editar::backdrop {
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(4px);
+}
+
+.modal-content {
+    background: #0d0f10;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 18px;
+    padding: 24px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+}
+
+.modal-content h3 {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: #f5f5f5;
+    margin: 0 0 18px 0;
+}
+
+.modal-form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-bottom: 16px;
+}
+
+.modal-form-group input {
+    padding: 10px 14px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    background: #111315;
+    color: #f5f5f5;
+    font-size: 0.95rem;
+    outline: none;
+    transition: all 0.2s ease;
+}
+
+.modal-form-group input:focus {
+    border-color: #60a5fa;
+    background: rgba(96, 165, 250, 0.05);
+}
+
+.modal-form-group input::placeholder {
+    color: #7f8792;
+}
+
+.modal-buttons {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-top: 22px;
+}
+
+.btn-salvar {
+    background: #16c784;
+    color: #111;
+    border: none;
+}
+
+.btn-salvar:hover {
+    background: #10b981;
+}
+
+.btn-cancelar {
+    background: transparent;
+    color: #d1d5db;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.btn-cancelar:hover {
+    background: rgba(255, 255, 255, 0.08);
+    color: #f5f5f5;
+}
+
+/* ===== RESPONSIVO ===== */
+@media (max-width: 768px) {
+    .form-grupo {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .form-grupo .btn {
+        grid-column: 1 / -1;
+    }
+
+    .meta-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+
+    .meta-header-acoes {
+        width: 100%;
+        justify-content: space-between;
+    }
+
+    .meta-acoes-linha {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .modal-editar {
+        width: 95%;
+    }
+
+    .modal-content {
+        padding: 18px;
+    }
+
+    .modal-buttons {
+        grid-template-columns: 1fr 1fr;
+    }
+}
+
+@media (max-width: 480px) {
+    .form-grupo {
+        grid-template-columns: 1fr;
+    }
+
+    .meta-header h3 {
+        font-size: 1rem;
+    }
+
+    .meta-badge {
+        font-size: 0.75rem;
+        padding: 4px 10px;
+    }
+
+    .meta-acoes-linha {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .meta-form-inline input {
+        min-height: 36px;
+        padding: 6px 10px;
+        font-size: 0.85rem;
+    }
+
+    .btn-mini {
+        min-height: 36px;
+        min-width: 36px;
+        font-size: 1rem;
+    }
+
+    .modal-editar {
+        width: 96%;
+    }
+
+    .modal-buttons {
+        grid-template-columns: 1fr 1fr;
+    }
+}

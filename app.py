@@ -1,26 +1,41 @@
 import os
 from datetime import timedelta
+from pathlib import Path
 from flask import Flask, render_template
 from dotenv import load_dotenv
-from flask_wtf.csrf import CSRFProtect
+from flask_wtf.csrf import CSRFProtect, CSRFError
 
 from routes.auth import auth_bp
 from routes.dashboard import dashboard_bp
 from routes.transacoes import transacoes_bp
 from routes.metas import metas_bp
 from routes.categorias import categorias_bp
+from routes.gastos_fixos import gastos_fixos_bp
 
-load_dotenv(dotenv_path=".env")
+base_dir = Path(__file__).resolve().parent
+load_dotenv(dotenv_path=base_dir / ".env")
 
 app = Flask(__name__)
-app.secret_key = os.getenv("SECRET_KEY", "granasimples_secret_key")
+secret_key = os.getenv("SECRET_KEY", "").strip()
+debug_mode = os.getenv("FLASK_DEBUG", "False").lower() == "true"
+is_production = os.getenv("FLASK_ENV", "").lower() == "production"
+
+if not secret_key:
+    if is_production:
+        raise RuntimeError("SECRET_KEY deve ser configurada em produção.")
+    secret_key = "dev-only-granasimples-secret-key"
+
+if is_production and secret_key == "granasimples_secret_key":
+    raise RuntimeError("SECRET_KEY padrão não pode ser usada em produção.")
+
+app.secret_key = secret_key
 
 csrf = CSRFProtect(app)
 
 app.config["SESSION_COOKIE_HTTPONLY"] = True
 app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
 app.config["PERMANENT_SESSION_LIFETIME"] = timedelta(hours=2)
-app.config["SESSION_COOKIE_SECURE"] = False
+app.config["SESSION_COOKIE_SECURE"] = is_production
 app.config["PROPAGATE_EXCEPTIONS"] = False
 
 app.register_blueprint(auth_bp)
@@ -28,6 +43,7 @@ app.register_blueprint(dashboard_bp)
 app.register_blueprint(transacoes_bp)
 app.register_blueprint(metas_bp)
 app.register_blueprint(categorias_bp)
+app.register_blueprint(gastos_fixos_bp)
 
 
 @app.route("/")
@@ -54,7 +70,9 @@ def erro_404(e):
 def erro_500(e):
     return render_template("erro.html", codigo=500, titulo="Erro interno", mensagem="Ocorreu um erro interno. Tente novamente em instantes."), 500
 
+@app.errorhandler(CSRFError)
+def handle_csrf_error(e):
+    return f"Erro de CSRF: {e.description}", 400
 
 if __name__ == "__main__":
-    debug_mode = os.getenv("FLASK_DEBUG", "False").lower() == "true"
-    app.run(debug=debug_mode)
+    app.run(host="0.0.0.0", port=5000, debug=debug_mode)

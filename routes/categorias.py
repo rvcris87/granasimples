@@ -9,8 +9,8 @@ categorias_bp = Blueprint("categorias", __name__)
 @login_required
 def add_categoria():
     usuario_id = session["usuario_id"]
-    nome = request.form["nome"].strip()
-    tipo = request.form["tipo"].strip()
+    nome = request.form.get("nome", "").strip()
+    tipo = request.form.get("tipo", "").strip()
 
     if not nome or tipo not in ["entrada", "saida"]:
         return redirect(url_for("dashboard.app_dashboard", erro="Categoria inválida."))

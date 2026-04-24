@@ -1,0 +1,143 @@
+/* ===== ESTILOS PARA GASTOS FIXOS INTEGRADOS ===== */
+
+/* Insights e Análises de Gastos Fixos */
+.gastos-fixos-insights {
+    margin-top: 18px;
+    padding: 16px;
+    background: rgba(96, 165, 250, 0.08);
+    border: 1px solid rgba(96, 165, 250, 0.2);
+    border-radius: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.gastos-fixos-insights .insight-item {
+    padding: 12px 14px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 10px;
+    border-left: 3px solid #60a5fa;
+    color: #d1d5db;
+    font-size: 0.9rem;
+}
+
+.gastos-fixos-insights .insight-item p {
+    margin: 0;
+    line-height: 1.4;
+}
+
+.gastos-fixos-insights .insight-item p strong {
+    color: #f5f5f5;
+}
+
+.gastos-fixos-insights .insight-alerta {
+    border-left-color: #f87171;
+    background: rgba(248, 113, 113, 0.08);
+    color: #fca5a5;
+}
+
+/* Seção de Lançamentos Pendentes */
+.lancamentos-pendentes {
+    padding: 12px 14px;
+    background: rgba(251, 191, 36, 0.08);
+    border: 1px solid rgba(251, 191, 36, 0.2);
+    border-radius: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    align-items: flex-start;
+}
+
+.lancamentos-pendentes p {
+    margin: 0;
+    color: #fcd34d;
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+.btn-lancar {
+    background: #fbbf24;
+    color: #111;
+    border: none;
+    font-weight: 700;
+    padding: 10px 18px;
+}
+
+.btn-lancar:hover {
+    background: #f59e0b;
+    transform: translateY(-1px);
+}
+
+.btn-lancar:active {
+    transform: translateY(0);
+}
+
+/* Seção de Lançamentos Completos */
+.lancamentos-ok {
+    padding: 12px 14px;
+    background: rgba(22, 199, 132, 0.08);
+    border: 1px solid rgba(22, 199, 132, 0.2);
+    border-radius: 10px;
+}
+
+.lancamentos-ok p {
+    margin: 0;
+    color: #bbf7d0;
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+/* ===== RESPONSIVO ===== */
+@media (max-width: 768px) {
+    .gastos-fixos-insights {
+        margin-top: 14px;
+        padding: 12px;
+        gap: 10px;
+    }
+
+    .gastos-fixos-insights .insight-item {
+        padding: 10px 12px;
+        font-size: 0.85rem;
+    }
+
+    .lancamentos-pendentes {
+        padding: 10px 12px;
+        gap: 8px;
+    }
+
+    .lancamentos-pendentes p {
+        font-size: 0.85rem;
+    }
+
+    .btn-lancar {
+        width: 100%;
+        padding: 12px 16px;
+    }
+}
+
+@media (max-width: 480px) {
+    .gastos-fixos-insights {
+        margin-top: 12px;
+        padding: 10px;
+    }
+
+    .gastos-fixos-insights .insight-item {
+        padding: 8px 10px;
+        font-size: 0.8rem;
+    }
+
+    .lancamentos-pendentes {
+        padding: 8px 10px;
+        gap: 6px;
+    }
+
+    .lancamentos-pendentes p {
+        font-size: 0.8rem;
+    }
+
+    .btn-lancar {
+        width: 100%;
+        padding: 10px 12px;
+        font-size: 0.9rem;
+    }
+}

@@ -9,11 +9,11 @@ transacoes_bp = Blueprint("transacoes", __name__)
 @login_required
 def add_transacao():
     usuario_id = session["usuario_id"]
-    descricao = request.form["descricao"].strip()
-    valor = request.form["valor"].strip()
-    tipo = request.form["tipo"].strip()
+    descricao = request.form.get("descricao", "").strip()
+    valor = request.form.get("valor", "").strip()
+    tipo = request.form.get("tipo", "").strip()
     categoria_id = request.form.get("categoria_id", "").strip()
-    data = request.form["data"]
+    data = request.form.get("data", "").strip()
 
     if not descricao or not valor or tipo not in ["entrada", "saida"] or not data:
         return redirect(url_for("dashboard.app_dashboard", erro="Preencha os campos corretamente."))
@@ -62,11 +62,11 @@ def add_transacao():
 @login_required
 def editar_transacao(transacao_id):
     usuario_id = session["usuario_id"]
-    descricao = request.form["descricao"].strip()
-    valor = request.form["valor"].strip()
-    tipo = request.form["tipo"].strip()
+    descricao = request.form.get("descricao", "").strip()
+    valor = request.form.get("valor", "").strip()
+    tipo = request.form.get("tipo", "").strip()
     categoria_id = request.form.get("categoria_id", "").strip()
-    data = request.form["data"]
+    data = request.form.get("data", "").strip()
 
     if not descricao or not valor or tipo not in ["entrada", "saida"] or not data:
         return redirect(url_for("dashboard.app_dashboard", erro="Preencha os campos corretamente."))

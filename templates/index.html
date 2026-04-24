@@ -4,495 +4,283 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Painel - Grana Simples</title>
-    <link rel="stylesheet" href="/static/style.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/metas.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/gastos-fixos.css') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
 </head>
+
 <body class="dashboard-page">
-    <div class="app-shell">
+<div class="app-shell">
 
-        <aside class="sidebar">
-            <div class="sidebar-top">
-                <div class="brand-mini">G</div>
+<!-- SIDEBAR -->
+<aside class="sidebar">
+    <div class="sidebar-top">
+        <div class="brand-mini">G</div>
 
-                <nav class="sidebar-nav">
-                    <a href="/app" class="nav-icon ativo" title="Dashboard">
-                        <i class="fa-solid fa-house"></i>
-                    </a>
-                    <a href="#nova-categoria" class="nav-icon" title="Nova categoria">
-                        <i class="fa-solid fa-tags"></i>
-                    </a>
-                    <a href="#nova-transacao" class="nav-icon" title="Nova transação">
-                        <i class="fa-solid fa-plus"></i>
-                    </a>
-                    <a href="#graficos" class="nav-icon" title="Gráficos">
-                        <i class="fa-solid fa-chart-line"></i>
-                    </a>
-                    <a href="#metas" class="nav-icon" title="Metas">
-                        <i class="fa-solid fa-bullseye"></i>
-                    </a>
-                </nav>
-            </div>
-
-            <div class="sidebar-bottom">
-                <a href="/logout" class="nav-icon" title="Sair">
-                    <i class="fa-solid fa-right-from-bracket"></i>
-                </a>
-            </div>
-        </aside>
-
-        <main class="dashboard-main">
-            <div class="dashboard-container">
-
-                {% if mensagem %}
-                    <div class="toast toast-sucesso" id="toastMensagem">{{ mensagem }}</div>
-                {% endif %}
-
-                {% if erro %}
-                    <div class="toast toast-erro" id="toastMensagem">{{ erro }}</div>
-                {% endif %}
-
-                <header class="topbar">
-                    <div>
-                        <h1>Olá, {{ nome }}</h1>
-                        <p>Aqui está um resumo das suas finanças</p>
-                    </div>
-
-                    <form method="GET" action="/app" class="topbar-filter">
-                        <input type="month" name="mes" value="{{ mes }}">
-                        <button type="submit" class="btn">Filtrar</button>
-                    </form>
-                </header>
-
-                <section class="resumo-cards">
-                    <div class="finance-card">
-                        <div class="finance-card-top">
-                            <div>
-                                <span class="card-label">ENTRADAS</span>
-                                <small>Receitas do período</small>
-                            </div>
-                            <div class="card-icon positivo">
-                                <i class="fa-solid fa-arrow-trend-up"></i>
-                            </div>
-                        </div>
-                        <strong class="valor-card">R$ {{ "%.2f"|format(total_entradas) }}</strong>
-                    </div>
-
-                    <div class="finance-card">
-                        <div class="finance-card-top">
-                            <div>
-                                <span class="card-label">SAÍDAS</span>
-                                <small>Despesas do período</small>
-                            </div>
-                            <div class="card-icon negativo">
-                                <i class="fa-solid fa-arrow-trend-down"></i>
-                            </div>
-                        </div>
-                        <strong class="valor-card">R$ {{ "%.2f"|format(total_saidas) }}</strong>
-                    </div>
-
-                    <div class="finance-card">
-                        <div class="finance-card-top">
-                            <div>
-                                <span class="card-label">SALDO</span>
-                                <small>Disponível agora</small>
-                            </div>
-                            <div class="card-icon {% if saldo >= 0 %}positivo{% else %}negativo{% endif %}">
-                                <i class="fa-solid fa-wallet"></i>
-                            </div>
-                        </div>
-                        <strong class="valor-card {% if saldo < 0 %}saida{% else %}entrada{% endif %}">
-                            R$ {{ "%.2f"|format(saldo) }}
-                        </strong>
-                    </div>
-                </section>
-
-                {% set total_movimentado = total_entradas if total_entradas > 0 else 1 %}
-                {% set percentual_gasto = (total_saidas / total_movimentado * 100) if total_entradas > 0 else 0 %}
-                {% set percentual_livre = 100 - percentual_gasto if total_entradas > 0 else 0 %}
-
-                <section class="painel-destaque">
-                    <div class="painel-destaque-topo">
-                        <div>
-                            <span class="card-label">RESULTADO DO PERÍODO</span>
-                            <small>Entradas - Saídas</small>
-                        </div>
-                        <div class="card-icon {% if saldo >= 0 %}positivo{% else %}negativo{% endif %}">
-                            <i class="fa-solid fa-chart-simple"></i>
-                        </div>
-                    </div>
-
-                    <div class="resultado-valor {% if saldo >= 0 %}entrada{% else %}saida{% endif %}">
-                        {% if saldo >= 0 %}+{% endif %}R$ {{ "%.2f"|format(saldo) }}
-                    </div>
-
-                    <div class="resultado-legenda">
-                        <span><i class="dot dot-verde"></i> Receitas R$ {{ "%.2f"|format(total_entradas) }}</span>
-                        <span><i class="dot dot-vermelho"></i> Despesas R$ {{ "%.2f"|format(total_saidas) }}</span>
-                    </div>
-
-                    <div class="barra-resultado">
-                        <div class="barra-receita" data-largura="{{ percentual_livre }}"></div>
-                        <div class="barra-despesa" data-largura="{{ percentual_gasto }}"></div>
-                    </div>
-
-                    <div class="resultado-footer">
-                        <span>Economizado {{ "%.0f"|format(percentual_livre) }}%</span>
-                        <span>Gasto {{ "%.0f"|format(percentual_gasto) }}%</span>
-                    </div>
-                </section>
-
-                <section class="dashboard-grid">
-                    <div class="coluna-principal">
-
-                        <section class="painel-card" id="nova-categoria">
-                            <h2>Nova categoria</h2>
-
-                            <form method="POST" action="{{ url_for('categorias.add_categoria') }}" class="form-categoria">
-                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-
-                                <input
-                                    type="text"
-                                    id="nome"
-                                    name="nome"
-                                    placeholder="Nome da categoria"
-                                    required
-                                >
-
-                                <select id="tipo_categoria" name="tipo" required>
-                                    <option value="">Selecione o tipo</option>
-                                    <option value="entrada">Entrada</option>
-                                    <option value="saida">Saída</option>
-                                </select>
-
-                                <button type="submit" class="btn">Salvar categoria</button>
-                            </form>
-                        </section>
-
-                        <section class="painel-card" id="nova-transacao">
-                            <h2>Nova transação</h2>
-
-                            <form method="POST" action="{{ url_for('transacoes.add_transacao') }}" id="formTransacao">
-                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-
-                                <input
-                                    type="text"
-                                    id="descricao"
-                                    name="descricao"
-                                    placeholder="Descrição"
-                                    required
-                                >
-
-                                <input
-                                    type="number"
-                                    step="0.01"
-                                    min="0"
-                                    id="valor"
-                                    name="valor"
-                                    placeholder="Valor"
-                                    required
-                                >
-
-                                <select id="tipo" name="tipo" required>
-                                    <option value="">Selecione o tipo</option>
-                                    <option value="entrada">Entrada</option>
-                                    <option value="saida">Saída</option>
-                                </select>
-
-                                <select id="categoria_id" name="categoria_id">
-                                    <option value="">Selecione a categoria</option>
-                                    {% for categoria in categorias %}
-                                        <option
-                                            value="{{ categoria.id if categoria.id is defined else categoria['id'] }}"
-                                            data-tipo="{{ categoria.tipo if categoria.tipo is defined else categoria['tipo'] }}"
-                                        >
-                                            {{ categoria.nome if categoria.nome is defined else categoria['nome'] }}
-                                        </option>
-                                    {% endfor %}
-                                </select>
-
-                                <input
-                                    type="date"
-                                    id="data"
-                                    name="data"
-                                    required
-                                >
-
-                                <button type="submit" class="btn">Salvar transação</button>
-                            </form>
-                        </section>
-
-                        <section class="painel-card" id="graficos">
-                            <h2>Fluxo financeiro</h2>
-                            <div class="graficos-grid-interno">
-                                <div class="grafico-box">
-                                    <h3>Entradas x Saídas</h3>
-                                    <canvas id="graficoResumo"></canvas>
-                                </div>
-                                <div class="grafico-box">
-                                    <h3>Gastos por categoria</h3>
-                                    <canvas id="graficoCategorias"></canvas>
-                                </div>
-                            </div>
-                        </section>
-
-                        <section class="painel-card insights-card">
-                            <h2>Insights financeiros</h2>
-                            <div class="lista-insights">
-                                {% for insight in insights %}
-                                    <div class="insight-item">{{ insight }}</div>
-                                {% endfor %}
-                            </div>
-                        </section>
-                    </div>
-
-                    <div class="coluna-lateral">
-                        <section class="painel-card">
-                            <h2>Transações recentes</h2>
-
-                            {% if transacoes %}
-                                <div class="lista-transacoes">
-                                    {% for t in transacoes %}
-                                        <div class="transacao-item">
-                                            <div class="transacao-info">
-                                                <p class="transacao-descricao">{{ t["descricao"] }}</p>
-                                                <small>
-                                                    {{ t["categoria_nome"] or "Sem categoria" }}
-                                                    •
-                                                    {{ t["data"].strftime('%d/%m/%Y') if t["data"] else "" }}
-                                                </small>
-                                            </div>
-
-                                            <div class="transacao-lado-direito">
-                                                <strong class="{% if t['tipo'] == 'entrada' %}entrada{% else %}saida{% endif %}">
-                                                    {% if t["tipo"] == "entrada" %}+{% else %}-{% endif %}
-                                                    R$ {{ "%.2f"|format(t["valor"]) }}
-                                                </strong>
-
-                                                <details class="editar-transacao">
-                                                    <summary>Editar</summary>
-
-                                                    <form method="POST" action="{{ url_for('transacoes.editar_transacao', transacao_id=t['id']) }}">
-                                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-
-                                                        <input
-                                                            type="text"
-                                                            name="descricao"
-                                                            value="{{ t['descricao'] }}"
-                                                            required
-                                                        >
-
-                                                        <input
-                                                            type="number"
-                                                            step="0.01"
-                                                            min="0"
-                                                            name="valor"
-                                                            value="{{ t['valor'] }}"
-                                                            required
-                                                        >
-
-                                                        <select name="tipo" required>
-                                                            <option value="entrada" {% if t["tipo"] == "entrada" %}selected{% endif %}>Entrada</option>
-                                                            <option value="saida" {% if t["tipo"] == "saida" %}selected{% endif %}>Saída</option>
-                                                        </select>
-
-                                                        <select name="categoria_id">
-                                                            <option value="">Selecione a categoria</option>
-                                                            {% for categoria in categorias %}
-                                                                {% set categoria_id_atual = categoria.id if categoria.id is defined else categoria['id'] %}
-                                                                {% set categoria_nome_atual = categoria.nome if categoria.nome is defined else categoria['nome'] %}
-                                                                {% set categoria_tipo_atual = categoria.tipo if categoria.tipo is defined else categoria['tipo'] %}
-                                                                <option
-                                                                    value="{{ categoria_id_atual }}"
-                                                                    data-tipo="{{ categoria_tipo_atual }}"
-                                                                    {% if t["categoria_id"] == categoria_id_atual %}selected{% endif %}
-                                                                >
-                                                                    {{ categoria_nome_atual }}
-                                                                </option>
-                                                            {% endfor %}
-                                                        </select>
-
-                                                        <input
-                                                            type="date"
-                                                            name="data"
-                                                            value="{{ t['data'].strftime('%Y-%m-%d') if t['data'] else '' }}"
-                                                            required
-                                                        >
-
-                                                        <button type="submit" class="btn">Salvar edição</button>
-                                                    </form>
-                                                </details>
-
-                                                <a
-                                                    href="{{ url_for('transacoes.excluir_transacao', transacao_id=t['id']) }}"
-                                                    class="btn btn-secundario"
-                                                    onclick="return confirm('Tem certeza que deseja excluir esta transação?')"
-                                                >
-                                                    Excluir
-                                                </a>
-                                            </div>
-                                        </div>
-                                    {% endfor %}
-                                </div>
-                            {% else %}
-                                <p>Nenhuma transação cadastrada ainda.</p>
-                            {% endif %}
-                        </section>
-
-                        <section class="painel-card" id="metas">
-                            <h2>Metas financeiras</h2>
-
-                            <form method="POST" action="/add_meta" class="form-criar-meta">
-                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                <input type="text" name="titulo" placeholder="Nome da meta" required>
-                                <input type="number" step="0.01" name="valor_meta" placeholder="Valor da meta" required>
-                                <button type="submit" class="btn">Criar meta</button>
-                            </form>
-
-                            {% if metas %}
-                                {% for meta in metas %}
-                                    {% set progresso = (meta['valor_atual'] / meta['valor_meta'] * 100) if meta['valor_meta'] > 0 else 0 %}
-                                    {% set restante = (meta['valor_meta'] - meta['valor_atual']) if meta['valor_meta'] > meta['valor_atual'] else 0 %}
-
-                                    <div class="meta-item">
-                                        <div class="meta-topo">
-                                            <strong>{{ meta["titulo"] }}</strong>
-                                            <span class="meta-restante">Faltam R$ {{ "%.2f"|format(restante) }}</span>
-                                        </div>
-
-                                        <div class="barra-meta">
-                                            <div class="progresso-meta" data-progresso="{{ progresso }}"></div>
-                                        </div>
-
-                                        <small>
-                                            R$ {{ "%.2f"|format(meta["valor_atual"]) }} /
-                                            R$ {{ "%.2f"|format(meta["valor_meta"]) }}
-                                            ({{ "%.0f"|format(progresso) }}%)
-                                        </small>
-
-                                        <div class="meta-acoes">
-                                            <form method="POST" action="/adicionar_valor_meta/{{ meta['id'] }}">
-                                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                                <input type="number" step="0.01" name="valor_adicionar" placeholder="Adicionar valor" required>
-                                                <button type="submit" class="btn">Adicionar</button>
-                                            </form>
-
-                                            <form method="POST" action="/retirar_valor_meta/{{ meta['id'] }}">
-                                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                                <input type="number" step="0.01" name="valor_retirar" placeholder="Retirar valor" required>
-                                                <button type="submit" class="btn btn-secundario">Retirar</button>
-                                            </form>
-                                        </div>
-
-                                        <form method="POST" action="/usar_saldo_meta/{{ meta['id'] }}" class="form-meta-inteligente">
-                                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                            <input type="number" step="0.01" name="valor_usar_saldo" placeholder="Quanto do saldo usar nesta meta?" required>
-                                            <button type="submit" class="btn">Reservar saldo para meta</button>
-                                        </form>
-
-                                        <details class="editar-transacao detalhe-meta">
-                                            <summary>Editar meta</summary>
-                                            <form method="POST" action="/editar_meta/{{ meta['id'] }}">
-                                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                                <input type="text" name="titulo" value="{{ meta['titulo'] }}" required>
-                                                <input type="number" step="0.01" name="valor_meta" value="{{ meta['valor_meta'] }}" required>
-                                                <button type="submit" class="btn">Salvar meta</button>
-                                            </form>
-                                        </details>
-
-                                        <div class="acao-excluir-meta">
-                                            <a
-                                                href="/excluir_meta/{{ meta['id'] }}"
-                                                class="btn btn-secundario"
-                                                onclick="return confirm('Tem certeza que deseja excluir esta meta?')"
-                                            >
-                                                Excluir meta
-                                            </a>
-                                        </div>
-                                    </div>
-                                {% endfor %}
-                            {% else %}
-                                <p>Nenhuma meta criada ainda.</p>
-                            {% endif %}
-                        </section>
-                    </div>
-                </section>
-
-                <div
-                    id="dados-graficos"
-                    data-entradas="{{ total_entradas }}"
-                    data-saidas="{{ total_saidas }}"
-                    data-categorias-labels='{{ categorias_labels | tojson | safe }}'
-                    data-categorias-valores='{{ categorias_valores | tojson | safe }}'>
-                </div>
-            </div>
-        </main>
+        <nav class="sidebar-nav">
+            <a href="/app" class="nav-icon ativo"><i class="fa-solid fa-house"></i></a>
+            <a href="#nova-categoria" class="nav-icon"><i class="fa-solid fa-tags"></i></a>
+            <a href="#nova-transacao" class="nav-icon"><i class="fa-solid fa-plus"></i></a>
+            <a href="#graficos" class="nav-icon"><i class="fa-solid fa-chart-line"></i></a>
+            <a href="#metas" class="nav-icon"><i class="fa-solid fa-bullseye"></i></a>
+        </nav>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script>
+    <div class="sidebar-bottom">
+        <form method="POST" action="{{ url_for('auth.logout') }}" class="logout-form">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit" class="nav-icon" aria-label="Sair">
+                <i class="fa-solid fa-right-from-bracket"></i>
+            </button>
+        </form>
+    </div>
+</aside>
+
+<!-- MAIN -->
+<main class="dashboard-main">
+<div class="dashboard-container">
+
+{% with mensagens = get_flashed_messages(with_categories=true) %}
+  {% if mensagens %}
+    {% for categoria, mensagem in mensagens %}
+      <div class="toast toast-{{ categoria }}">{{ mensagem }}</div>
+    {% endfor %}
+  {% endif %}
+{% endwith %}
+
+<!-- HEADER -->
+<header class="topbar">
+    <div>
+        <h1>Olá, {{ nome }}</h1>
+        <p>Resumo das suas finanças</p>
+    </div>
+
+    <form method="GET" action="/app">
+        <input type="month" name="mes" value="{{ mes }}">
+        <button class="btn">Filtrar</button>
+    </form>
+</header>
+
+<!-- CARDS -->
+<section class="resumo-cards">
+    <div class="finance-card">
+        <span>Entradas</span>
+        <strong>R$ {{ "%.2f"|format(total_entradas or 0) }}</strong>
+    </div>
+
+    <div class="finance-card">
+        <span>Saídas</span>
+        <strong>R$ {{ "%.2f"|format(total_saidas or 0) }}</strong>
+    </div>
+
+    <div class="finance-card">
+        <span>Saldo</span>
+        <strong>R$ {{ "%.2f"|format(saldo or 0) }}</strong>
+    </div>
+</section>
+
+<section class="dashboard-grid">
+
+<!-- COLUNA PRINCIPAL -->
+<div class="coluna-principal">
+
+<!-- NOVA CATEGORIA -->
+<section class="painel-card" id="nova-categoria">
+    <h2>Nova categoria</h2>
+
+    <form method="POST" action="{{ url_for('categorias.add_categoria') }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <input type="text" name="nome" placeholder="Nome da categoria" required>
+
+        <select name="tipo" required>
+            <option value="">Tipo</option>
+            <option value="entrada">Entrada</option>
+            <option value="saida">Saída</option>
+        </select>
+
+        <button class="btn">Salvar</button>
+    </form>
+</section>
+
+<!-- NOVA TRANSACAO -->
+<section class="painel-card" id="nova-transacao">
+    <h2>Nova transação</h2>
+
+    <form method="POST" action="{{ url_for('transacoes.add_transacao') }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+        <input type="text" name="descricao" placeholder="Descrição" required>
+        <input type="number" step="0.01" name="valor" placeholder="Valor" required>
+
+        <select name="tipo" id="tipo" required>
+            <option value="">Tipo</option>
+            <option value="entrada">Entrada</option>
+            <option value="saida">Saída</option>
+        </select>
+
+        <select name="categoria_id" id="categoria_id">
+            <option value="">Categoria</option>
+            {% for c in categorias %}
+            <option value="{{ c.id }}">{{ c.nome }}</option>
+            {% endfor %}
+        </select>
+
+        <input type="date" name="data" required>
+
+        <button class="btn">Salvar</button>
+    </form>
+</section>
+
+<!-- GRAFICOS -->
+<section class="painel-card" id="graficos">
+    <h2>Fluxo financeiro</h2>
+    <div class="graficos-grid-interno">
+        <div class="grafico-box">
+            <h3>Entradas x Saídas</h3>
+            <canvas id="graficoResumo"></canvas>
+        </div>
+
+        <div class="grafico-box">
+            <h3>Gastos por categoria</h3>
+            <canvas id="graficoCategorias"></canvas>
+        </div>
+    </div>
+</section>
+
+<div
+    id="dados-graficos"
+    data-entradas="{{ total_entradas }}"
+    data-saidas="{{ total_saidas }}"
+    data-categorias-labels='{{ categorias_labels | tojson | safe }}'
+    data-categorias-valores='{{ categorias_valores | tojson | safe }}'>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    document.addEventListener("DOMContentLoaded", () => {
         const dadosGraficos = document.getElementById("dados-graficos");
+        if (!dadosGraficos) return;
 
         const totalEntradas = parseFloat(dadosGraficos.dataset.entradas || 0);
         const totalSaidas = parseFloat(dadosGraficos.dataset.saidas || 0);
-        const categoriasLabels = JSON.parse(dadosGraficos.dataset.categoriasLabels || "[]");
-        const categoriasValores = JSON.parse(dadosGraficos.dataset.categoriasValores || "[]");
 
-        const graficoResumo = document.getElementById("graficoResumo");
-        const graficoCategorias = document.getElementById("graficoCategorias");
+        let categoriasLabels = [];
+        let categoriasValores = [];
 
-        new Chart(graficoResumo, {
-            type: "bar",
-            data: {
-                labels: ["Entradas", "Saídas"],
-                datasets: [{
-                    data: [totalEntradas, totalSaidas],
-                    backgroundColor: ["#16c784", "#ea3943"],
-                    borderRadius: 10
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: { display: false }
+        try {
+            categoriasLabels = JSON.parse(dadosGraficos.dataset.categoriasLabels || "[]");
+            categoriasValores = JSON.parse(dadosGraficos.dataset.categoriasValores || "[]");
+        } catch (erro) {
+            console.error("Erro ao ler dados dos gráficos:", erro);
+            categoriasLabels = [];
+            categoriasValores = [];
+        }
+
+        const canvasResumo = document.getElementById("graficoResumo");
+        const canvasCategorias = document.getElementById("graficoCategorias");
+
+        if (canvasResumo) {
+            new Chart(canvasResumo, {
+                type: "doughnut",
+                data: {
+                    labels: ["Entradas", "Saídas"],
+                    datasets: [{
+                        data: [totalEntradas, totalSaidas],
+                        backgroundColor: ["#3ecf8e", "#f87171"],
+                        borderWidth: 0,
+                        hoverOffset: 10
+                    }]
                 },
-                scales: {
-                    x: {
-                        ticks: { color: "#a1a1aa" },
-                        grid: { display: false }
-                    },
-                    y: {
-                        ticks: { color: "#a1a1aa" },
-                        grid: { color: "rgba(255,255,255,0.06)" }
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: "62%",
+                    plugins: {
+                        legend: {
+                            position: "bottom",
+                            labels: {
+                                color: "#d4d4d8",
+                                boxWidth: 18,
+                                padding: 18,
+                                font: {
+                                    size: 14
+                                }
+                            }
+                        }
                     }
                 }
-            }
-        });
+            });
+        }
 
-        new Chart(graficoCategorias, {
-            type: "doughnut",
-            data: {
-                labels: categoriasLabels,
-                datasets: [{
-                    data: categoriasValores,
-                    backgroundColor: [
-                        "#16c784", "#ea3943", "#3b82f6", "#f59e0b",
-                        "#8b5cf6", "#14b8a6", "#f43f5e", "#94a3b8"
-                    ],
-                    borderWidth: 0
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                cutout: "68%",
-                plugins: {
-                    legend: {
-                        labels: { color: "#d4d4d8" }
+        if (canvasCategorias) {
+            const semDados = !categoriasLabels.length || !categoriasValores.length;
+
+            new Chart(canvasCategorias, {
+                type: "bar",
+                data: {
+                    labels: semDados ? ["Sem dados"] : categoriasLabels,
+                    datasets: [{
+                        label: "Gastos por categoria",
+                        data: semDados ? [0] : categoriasValores,
+                        backgroundColor: [
+                            "#60a5fa",
+                            "#34d399",
+                            "#fbbf24",
+                            "#f87171",
+                            "#a78bfa",
+                            "#22d3ee",
+                            "#fb7185",
+                            "#94a3b8"
+                        ],
+                        borderRadius: 12,
+                        borderSkipped: false,
+                        maxBarThickness: 70
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return "R$ " + Number(context.raw).toFixed(2);
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            ticks: {
+                                color: "#a1a1aa",
+                                font: {
+                                    size: 13
+                                }
+                            },
+                            grid: {
+                                display: false
+                            }
+                        },
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                color: "#a1a1aa",
+                                callback: function(value) {
+                                    return "R$ " + value;
+                                }
+                            },
+                            grid: {
+                                color: "rgba(255,255,255,0.05)"
+                            }
+                        }
                     }
                 }
-            }
-        });
+            });
+        }
 
         function filtrarCategorias(tipoSelect, categoriaSelect) {
             if (!tipoSelect || !categoriaSelect) return;
@@ -513,10 +301,7 @@
                         opcao.hidden = false;
                     } else {
                         opcao.hidden = true;
-
-                        if (opcao.selected) {
-                            categoriaSelect.value = "";
-                        }
+                        if (opcao.selected) categoriaSelect.value = "";
                     }
                 });
             };
@@ -525,49 +310,427 @@
             atualizar();
         }
 
-        document.addEventListener("DOMContentLoaded", () => {
-            filtrarCategorias(
-                document.getElementById("tipo"),
-                document.getElementById("categoria_id")
-            );
+        filtrarCategorias(
+            document.getElementById("tipo"),
+            document.getElementById("categoria_id")
+        );
 
-            document.querySelectorAll(".editar-transacao form").forEach(form => {
-                const tipoSelect = form.querySelector('select[name="tipo"]');
-                const categoriaSelect = form.querySelector('select[name="categoria_id"]');
-                filtrarCategorias(tipoSelect, categoriaSelect);
-            });
+        document.querySelectorAll(".editar-transacao form").forEach(form => {
+            const tipoSelect = form.querySelector('select[name="tipo"]');
+            const categoriaSelect = form.querySelector('select[name="categoria_id"]');
+            filtrarCategorias(tipoSelect, categoriaSelect);
+        });
 
-            document.querySelectorAll(".progresso-meta").forEach(barra => {
-                const progresso = parseFloat(barra.dataset.progresso || 0);
-                barra.style.width = "0%";
-                setTimeout(() => {
-                    barra.style.width = progresso + "%";
-                }, 120);
-            });
+        document.querySelectorAll(".progresso-meta").forEach(barra => {
+            const progresso = parseFloat(barra.dataset.progresso || 0);
+            barra.style.width = "0%";
+            setTimeout(() => {
+                barra.style.width = progresso + "%";
+            }, 120);
+        });
 
-            document.querySelectorAll(".transacao-item").forEach((item, index) => {
-                item.style.opacity = "0";
-                item.style.transform = "translateY(10px)";
-                item.style.transition = "all 0.35s ease";
+        document.querySelectorAll(".barra-receita, .barra-despesa").forEach(barra => {
+            const largura = parseFloat(barra.dataset.largura || 0);
+            barra.style.width = largura + "%";
+        });
 
-                setTimeout(() => {
-                    item.style.opacity = "1";
-                    item.style.transform = "translateY(0)";
-                }, 70 * index);
-            });
+        const toast = document.getElementById("toastMensagem");
+        if (toast) {
+            setTimeout(() => {
+                toast.classList.add("toast-esconder");
+            }, 2600);
+        }
+    });
+</script>
 
-            document.querySelectorAll(".barra-receita, .barra-despesa").forEach(barra => {
-                const largura = parseFloat(barra.dataset.largura || 0);
-                barra.style.width = largura + "%";
-            });
+<!-- GRÁFICO DE TENDÊNCIA (ÚLTIMOS 6 MESES) -->
+<section class="painel-card">
+    <h2>Tendência Financeira</h2>
+    <div class="grafico-box">
+        <h3>Últimos 6 Meses</h3>
+        <canvas id="graficoTendencia"></canvas>
+    </div>
+</section>
 
-            const toast = document.getElementById("toastMensagem");
-            if (toast) {
-                setTimeout(() => {
-                    toast.classList.add("toast-esconder");
-                }, 2600);
+<div
+    id="dados-tendencia"
+    data-labels='{{ tendencia_labels | tojson | safe }}'
+    data-entradas='{{ tendencia_entradas | tojson | safe }}'
+    data-saidas='{{ tendencia_saidas | tojson | safe }}'
+    data-saldo='{{ tendencia_saldo | tojson | safe }}'>
+</div>
+
+<!-- INSIGHTS INTELIGENTES -->
+<section class="painel-card">
+    <h2>Análise Inteligente</h2>
+    
+    <div class="insights-container">
+        <!-- Comparação com mês anterior -->
+        {% if mes and mensagem_comparacao %}
+        <div class="insight-item insight-comparacao">
+            {{ mensagem_comparacao }}
+        </div>
+        {% endif %}
+        
+        <!-- Maior categoria -->
+        {% if maior_categoria %}
+        <div class="insight-item insight-categoria">
+            🔥 Maior gasto: <strong>{{ maior_categoria }}</strong> (R$ {{ "%.2f"|format(maior_valor) }})
+        </div>
+        {% endif %}
+        
+        <!-- Previsão de Gastos -->
+        {% if previsao_mensagem %}
+        <div class="insight-item insight-previsao">
+            📊 {{ previsao_mensagem }}
+        </div>
+        {% endif %}
+        
+        <!-- Alertas -->
+        {% if alertas %}
+        <div class="alertas-box">
+            {% for alerta in alertas %}
+            <div class="insight-item insight-alerta">
+                {{ alerta }}
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        
+        <!-- Alertas de Metas -->
+        {% if alertas_metas %}
+        <div class="alertas-metas">
+            {% for alerta_meta in alertas_metas %}
+            <div class="insight-item {% if alerta_meta.tipo == 'erro' %}insight-alerta{% else %}insight-aviso{% endif %}">
+                {{ alerta_meta.mensagem }}
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        
+        <!-- Insights clássicos (backward compatibility) -->
+        {% if insights %}
+        <div class="insights-classicos">
+            {% for insight in insights %}
+            <p>{{ insight }}</p>
+            {% endfor %}
+        </div>
+        {% endif %}
+    </div>
+</section>
+
+</div>
+
+<!-- COLUNA LATERAL -->
+<div class="coluna-lateral">
+
+<!-- TRANSAÇÕES -->
+<section class="painel-card">
+    <h2>Transações recentes</h2>
+
+    {% if transacoes %}
+        {% for t in transacoes %}
+        <div class="transacao-item">
+            <div>
+                <p>{{ t.descricao or "Sem descrição" }}</p>
+                <small>
+                    {{ t.categoria_nome or "Sem categoria" }} •
+                    {% if t.data %}{{ t.data.strftime('%d/%m/%Y') }}{% else %}Data desconhecida{% endif %}
+                </small>
+            </div>
+
+            <strong>
+                {% if t.tipo == "entrada" %}+{% else %}-{% endif %}
+                R$ {{ "%.2f"|format(t.valor or 0) }}
+            </strong>
+        </div>
+        {% endfor %}
+    {% else %}
+        <p class="vazio">Nenhuma transação registrada</p>
+    {% endif %}
+</section>
+
+<!-- GASTOS FIXOS -->
+<section class="painel-card" id="gastos-fixos">
+    <h2>Gastos Fixos</h2>
+
+    <form method="POST" action="{{ url_for('gastos_fixos.add_gasto_fixo') }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <input type="text" name="descricao" placeholder="Descrição do gasto" required>
+        <input type="number" step="0.01" name="valor" placeholder="Valor" required>
+        
+        <select name="categoria_id">
+            <option value="">Categoria (opcional)</option>
+            {% for c in categorias %}
+            <option value="{{ c.id }}">{{ c.nome }}</option>
+            {% endfor %}
+        </select>
+        
+        <input type="number" name="dia_vencimento" min="1" max="31" placeholder="Dia do vencimento" required>
+        <button class="btn">Adicionar</button>
+    </form>
+
+    {% if gastos_fixos %}
+    <div class="gastos-fixos-lista">
+        {% for gf in gastos_fixos %}
+        <div class="gasto-fixo-item {% if not gf.ativo %}inativo{% endif %}">
+            <div>
+                <p><strong>{{ gf.descricao or "Gasto sem descrição" }}</strong></p>
+                <small>{{ gf.categoria_nome or "Sem categoria" }} • Dia {{ gf.dia_vencimento or "?" }}</small>
+            </div>
+            <strong>R$ {{ "%.2f"|format(gf.valor or 0) }}</strong>
+            
+            <div class="gasto-fixo-actions">
+                <form method="POST" action="{{ url_for('gastos_fixos.toggle_gasto_fixo', gasto_id=gf.id) }}" style="display:inline;">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="btn-icon" title="{% if gf.ativo %}Desativar{% else %}Ativar{% endif %}">
+                        {% if gf.ativo %}🔴{% else %}⚪{% endif %}
+                    </button>
+                </form>
+                
+                <form method="POST" action="{{ url_for('gastos_fixos.excluir_gasto_fixo', gasto_id=gf.id) }}" style="display:inline;">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="btn-icon" title="Excluir">🗑️</button>
+                </form>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- INSIGHTS GASTOS FIXOS -->
+    {% if mensagem_gastos_fixos %}
+    <div class="gastos-fixos-insights">
+        <div class="insight-item">
+            <p><strong>📊 Análise de Gastos Fixos</strong></p>
+            <p>{{ mensagem_gastos_fixos }}</p>
+        </div>
+        
+        {% if alertas_gastos_fixos %}
+        {% for alerta in alertas_gastos_fixos %}
+        <div class="insight-item insight-alerta">
+            {{ alerta }}
+        </div>
+        {% endfor %}
+        {% endif %}
+
+        <!-- Botão para lançar gastos fixos do mês -->
+        {% if lancamentos_pendentes.possui_pendentes %}
+        <div class="lancamentos-pendentes">
+            <p>{{ lancamentos_pendentes.mensagem }}</p>
+            <form method="POST" action="{{ url_for('gastos_fixos.lancar_gastos_fixos_mes') }}" style="display:inline;">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit" class="btn btn-lancar">
+                    🚀 Lançar Gastos Fixos do Mês
+                </button>
+            </form>
+        </div>
+        {% else %}
+        <div class="lancamentos-ok">
+            <p>✅ Todos os gastos fixos do mês já foram lançados como transações.</p>
+        </div>
+        {% endif %}
+    </div>
+    {% endif %}
+    {% endif %}
+</section>
+
+<!-- METAS -->
+<section class="painel-card" id="metas">
+    <h2>Metas</h2>
+
+    <form method="POST" action="{{ url_for('metas.add_meta') }}" class="form-criar-meta">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <div class="form-grupo">
+            <input name="titulo" placeholder="Nome da meta" required>
+            <input name="valor_meta" type="number" step="0.01" placeholder="Valor alvo" required>
+            <button class="btn" type="submit">Criar Meta</button>
+        </div>
+    </form>
+
+    {% if metas %}
+    <div class="lista-metas">
+        {% for m in metas %}
+        <div class="meta-item">
+            <div class="meta-header">
+                <h3>{{ m.titulo or "Meta sem nome" }}</h3>
+                <div class="meta-header-acoes">
+                    {% set valor_atual = m.valor_atual or 0 %}
+                    {% set valor_meta = m.valor_meta or 0 %}
+                    <span class="meta-badge">R$ {{ "%.2f"|format(valor_atual) }} / R$ {{ "%.2f"|format(valor_meta) }}</span>
+                    <details class="meta-menu">
+                        <summary class="meta-menu-btn">⋮</summary>
+                        <div class="meta-menu-content">
+                            <button class="meta-menu-item" onclick="document.getElementById('form-editar-{{ m.id }}').showModal()">✏️ Editar</button>
+                            <form method="POST" action="{{ url_for('metas.delete_meta', meta_id=m.id) }}" style="display: inline;">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <button class="meta-menu-item meta-menu-item-delete" onclick="return confirm('Tem certeza que deseja excluir esta meta?')">🗑️ Excluir</button>
+                            </form>
+                        </div>
+                    </details>
+                </div>
+            </div>
+
+            <dialog id="form-editar-{{ m.id }}" class="modal-editar">
+                <div class="modal-content">
+                    <h3>Editar Meta</h3>
+                    <form method="POST" action="{{ url_for('metas.editar_meta', meta_id=m.id) }}">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <div class="modal-form-group">
+                            <input type="text" name="titulo" value="{{ m.titulo or '' }}" placeholder="Nome da meta" required>
+                        </div>
+                        <div class="modal-form-group">
+                            <input type="number" name="valor_meta" step="0.01" value="{{ valor_meta }}" placeholder="Valor alvo" required>
+                        </div>
+                        <div class="modal-form-group modal-buttons">
+                            <button type="submit" class="btn btn-salvar">Salvar</button>
+                            <button type="button" class="btn btn-cancelar" onclick="document.getElementById('form-editar-{{ m.id }}').close()">Cancelar</button>
+                        </div>
+                    </form>
+                </div>
+            </dialog>
+
+            <div class="barra-meta">
+                {% if valor_meta and valor_meta > 0 %}
+                    {% set pct = (valor_atual / valor_meta * 100)|round(1) %}
+                    <div class="progresso-meta" style="width: {{ 100 if pct > 100 else pct }}%"></div>
+                {% else %}
+                    <div class="progresso-meta" style="width: 0%"></div>
+                {% endif %}
+            </div>
+
+            <div class="meta-acoes-linha">
+                <form method="POST" action="{{ url_for('metas.adicionar_valor_meta', meta_id=m.id) }}" class="meta-form-inline">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <input name="valor_adicionar" type="number" step="0.01" placeholder="Adicionar" required>
+                    <button class="btn-mini btn-adicionar" type="submit">+</button>
+                </form>
+
+                <form method="POST" action="{{ url_for('metas.retirar_valor_meta', meta_id=m.id) }}" class="meta-form-inline">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <input name="valor_retirar" type="number" step="0.01" placeholder="Retirar" required>
+                    <button class="btn-mini btn-retirar" type="submit">−</button>
+                </form>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <p class="vazio">Nenhuma meta criada ainda</p>
+    {% endif %}
+</section>
+
+</div> <!-- FECHA COLUNA LATERAL -->
+
+</section> <!-- FECHA GRID -->
+
+</div>
+</main>
+
+</div>
+
+<!-- SCRIPT DO GRÁFICO DE TENDÊNCIA -->
+<script>
+    // GRÁFICO DE TENDÊNCIA (6 MESES)
+    const dadosTendencia = document.getElementById("dados-tendencia");
+    const canvasTendencia = document.getElementById("graficoTendencia");
+
+    if (dadosTendencia && canvasTendencia) {
+        let tendenciaLabels = [];
+        let tendenciaEntradas = [];
+        let tendenciaSaidas = [];
+        let tendenciaSaldo = [];
+
+        try {
+            tendenciaLabels = JSON.parse(dadosTendencia.dataset.labels || "[]");
+            tendenciaEntradas = JSON.parse(dadosTendencia.dataset.entradas || "[]");
+            tendenciaSaidas = JSON.parse(dadosTendencia.dataset.saidas || "[]");
+            tendenciaSaldo = JSON.parse(dadosTendencia.dataset.saldo || "[]");
+        } catch (erro) {
+            console.error("Erro ao ler dados de tendência:", erro);
+        }
+
+        new Chart(canvasTendencia, {
+            type: "line",
+            data: {
+                labels: tendenciaLabels,
+                datasets: [
+                    {
+                        label: "Entradas",
+                        data: tendenciaEntradas,
+                        borderColor: "#3ecf8e",
+                        backgroundColor: "rgba(62, 207, 142, 0.1)",
+                        tension: 0.4,
+                        fill: true,
+                        pointRadius: 5,
+                        pointBackgroundColor: "#3ecf8e",
+                        pointHoverRadius: 7
+                    },
+                    {
+                        label: "Saídas",
+                        data: tendenciaSaidas,
+                        borderColor: "#f87171",
+                        backgroundColor: "rgba(248, 113, 113, 0.1)",
+                        tension: 0.4,
+                        fill: true,
+                        pointRadius: 5,
+                        pointBackgroundColor: "#f87171",
+                        pointHoverRadius: 7
+                    },
+                    {
+                        label: "Saldo",
+                        data: tendenciaSaldo,
+                        borderColor: "#60a5fa",
+                        backgroundColor: "rgba(96, 165, 250, 0.1)",
+                        tension: 0.4,
+                        fill: true,
+                        pointRadius: 5,
+                        pointBackgroundColor: "#60a5fa",
+                        pointHoverRadius: 7
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: true,
+                        labels: {
+                            color: "#d4d4d8",
+                            padding: 15,
+                            font: { size: 13 }
+                        }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return context.dataset.label + ": R$ " + Number(context.raw).toFixed(2);
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        ticks: { color: "#a1a1aa" },
+                        grid: { display: false }
+                    },
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            color: "#a1a1aa",
+                            callback: function(value) {
+                                return "R$ " + value;
+                            }
+                        },
+                        grid: { color: "rgba(255,255,255,0.05)" }
+                    }
+                }
             }
         });
-    </script>
+    }
+</script>
+
+<script src="{{ url_for('static', filename='js/prevenir-duplo-clique.js') }}"></script>
+
 </body>
 </html>

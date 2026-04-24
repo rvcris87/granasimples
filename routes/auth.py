@@ -19,8 +19,8 @@ def login():
     erro = None
 
     if request.method == "POST":
-        email = request.form["email"].strip().lower()
-        senha = request.form["senha"].strip()
+        email = request.form.get("email", "").strip().lower()
+        senha = request.form.get("senha", "")
 
         if not email_valido(email):
             erro = "Digite um email válido."
@@ -62,9 +62,9 @@ def register():
     erro = None
 
     if request.method == "POST":
-        nome = request.form["nome"].strip()
-        email = request.form["email"].strip().lower()
-        senha = request.form["senha"].strip()
+        nome = request.form.get("nome", "").strip()
+        email = request.form.get("email", "").strip().lower()
+        senha = request.form.get("senha", "")
 
         if not nome_valido(nome):
             erro = "O nome deve ter pelo menos 2 caracteres."
@@ -120,7 +120,7 @@ def register():
     return render_template("register.html", erro=erro)
 
 
-@auth_bp.route("/logout")
+@auth_bp.route("/logout", methods=["POST"])
 def logout():
     session.clear()
     return redirect(url_for("home"))
