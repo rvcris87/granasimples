@@ -38,11 +38,19 @@ def intervalo_mes(mes):
     return inicio, fim
 
 
-def meses_reais(quantidade, incluir_atual=True):
-    hoje = date.today().replace(day=1)
+def meses_reais(quantidade, incluir_atual=True, referencia=None):
+    hoje = (referencia or date.today()).replace(day=1)
     deslocamento_final = 0 if incluir_atual else -1
     primeiro_deslocamento = deslocamento_final - quantidade + 1
     return [adicionar_meses(hoje, deslocamento) for deslocamento in range(primeiro_deslocamento, deslocamento_final + 1)]
+
+
+def formatar_label_mes(data_mes):
+    nomes_meses = [
+        "jan", "fev", "mar", "abr", "mai", "jun",
+        "jul", "ago", "set", "out", "nov", "dez"
+    ]
+    return f"{nomes_meses[data_mes.month - 1]}/{str(data_mes.year)[-2:]}"
 
 
 def email_valido(email):
@@ -340,43 +348,52 @@ def buscar_categorias(usuario_id, tipo=None, incluir_sistema=False, conn=None):
 
 # ===== NOVAS FUNCIONALIDADES =====
 
-def calcular_tendencia_6_meses(usuario_id, conn=None):
+def calcular_tendencia_6_meses(usuario_id, mes_referencia=None, conn=None):
     """
-    Calcula tendência financeira dos últimos 6 meses
+    Calcula tendência financeira dos 6 meses até o mês de referência
     Retorna: labels, entradas, saidas, saldo
     """
     fechar_conn = conn is None
     conn = conn or conectar()
     cur = conn.cursor()
 
-    meses = meses_reais(6, incluir_atual=True)
-    labels = [mes.strftime("%b").capitalize() for mes in meses]
+    referencia = parse_mes(mes_referencia) if mes_referencia else date.today().replace(day=1)
+    meses = meses_reais(6, incluir_atual=True, referencia=referencia)
+    labels = [formatar_label_mes(mes) for mes in meses]
+    inicio_periodo = meses[0]
+    fim_periodo = adicionar_meses(meses[-1], 1)
+
+    cur.execute("""
+        SELECT
+            DATE_TRUNC('month', data)::date AS mes,
+            COALESCE(SUM(CASE WHEN tipo = 'entrada' THEN valor ELSE 0 END), 0) AS total_entradas,
+            COALESCE(SUM(CASE WHEN tipo = 'saida' THEN valor ELSE 0 END), 0) AS total_saidas
+        FROM transacoes
+        WHERE usuario_id = %s
+          AND data >= %s
+          AND data < %s
+        GROUP BY DATE_TRUNC('month', data)::date
+    """, (usuario_id, inicio_periodo, fim_periodo))
+
+    totais_por_mes = {
+        linha["mes"]: {
+            "entradas": float(linha["total_entradas"] or 0),
+            "saidas": float(linha["total_saidas"] or 0)
+        }
+        for linha in cur.fetchall()
+    }
 
     tendencia_entradas = []
     tendencia_saidas = []
     tendencia_saldo = []
 
     for mes_data in meses:
-        inicio_mes = mes_data
-        fim_mes = adicionar_meses(inicio_mes, 1)
-        cur.execute("""
-            SELECT
-                COALESCE(SUM(CASE WHEN tipo = 'entrada' THEN valor ELSE 0 END), 0) AS total_entradas,
-                COALESCE(SUM(CASE WHEN tipo = 'saida' THEN valor ELSE 0 END), 0) AS total_saidas
-            FROM transacoes
-            WHERE usuario_id = %s
-              AND data >= %s
-              AND data < %s
-        """, (usuario_id, inicio_mes, fim_mes))
-        
-        resultado = cur.fetchone()
-        entradas = float(resultado["total_entradas"] or 0)
-        saidas = float(resultado["total_saidas"] or 0)
-        saldo = entradas - saidas
-
+        totais = totais_por_mes.get(mes_data, {"entradas": 0.0, "saidas": 0.0})
+        entradas = totais["entradas"]
+        saidas = totais["saidas"]
         tendencia_entradas.append(entradas)
         tendencia_saidas.append(saidas)
-        tendencia_saldo.append(saldo)
+        tendencia_saldo.append(entradas - saidas)
 
     if fechar_conn:
         conn.close()

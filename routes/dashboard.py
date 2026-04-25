@@ -46,7 +46,7 @@ def app_dashboard():
 
         dados = calcular_dados_dashboard(usuario_id, mes, conn=conn)
         categorias = buscar_categorias(usuario_id, conn=conn) or []
-        tendencia = calcular_tendencia_6_meses(usuario_id, conn=conn) or {"labels": [], "entradas": [], "saidas": [], "saldo": []}
+        tendencia = calcular_tendencia_6_meses(usuario_id, mes_referencia=mes, conn=conn) or {"labels": [], "entradas": [], "saidas": [], "saldo": []}
         previsao = calcular_previsao_gastos(usuario_id, conn=conn) or {"valor": 0, "mensagem": ""}
         alertas_metas = calcular_alertas_metas(usuario_id, conn=conn) or []
         gastos_fixos = buscar_gastos_fixos(usuario_id, conn=conn) or []

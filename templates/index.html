@@ -724,105 +724,130 @@
     const canvasTendencia = document.getElementById("graficoTendencia");
 
     if (dadosTendencia && canvasTendencia) {
-        if (typeof Chart === "undefined") {
+        const mostrarAvisoTendencia = (mensagem) => {
             canvasTendencia.style.display = "none";
             const aviso = document.createElement("p");
             aviso.className = "grafico-aviso";
-            aviso.textContent = "Não foi possível carregar o gráfico de tendência agora.";
+            aviso.textContent = mensagem;
             canvasTendencia.parentElement.appendChild(aviso);
+        };
+
+        if (typeof Chart === "undefined") {
+            mostrarAvisoTendencia("Não foi possível carregar o gráfico de tendência agora.");
         } else {
-        let tendenciaLabels = [];
-        let tendenciaEntradas = [];
-        let tendenciaSaidas = [];
-        let tendenciaSaldo = [];
+            const formatarMoedaTendencia = new Intl.NumberFormat("pt-BR", {
+                style: "currency",
+                currency: "BRL"
+            });
+            let tendenciaLabels = [];
+            let tendenciaEntradas = [];
+            let tendenciaSaidas = [];
+            let tendenciaSaldo = [];
+            let dadosParseados = true;
 
-        try {
-            tendenciaLabels = JSON.parse(dadosTendencia.dataset.labels || "[]");
-            tendenciaEntradas = JSON.parse(dadosTendencia.dataset.entradas || "[]");
-            tendenciaSaidas = JSON.parse(dadosTendencia.dataset.saidas || "[]");
-            tendenciaSaldo = JSON.parse(dadosTendencia.dataset.saldo || "[]");
-        } catch (erro) {
-            console.error("Erro ao ler dados de tendência:", erro);
-        }
+            try {
+                tendenciaLabels = JSON.parse(dadosTendencia.dataset.labels || "[]");
+                tendenciaEntradas = JSON.parse(dadosTendencia.dataset.entradas || "[]");
+                tendenciaSaidas = JSON.parse(dadosTendencia.dataset.saidas || "[]");
+                tendenciaSaldo = JSON.parse(dadosTendencia.dataset.saldo || "[]");
+            } catch (erro) {
+                console.error("Erro ao ler dados de tendência:", erro);
+                dadosParseados = false;
+            }
 
-        new Chart(canvasTendencia, {
-            type: "line",
-            data: {
-                labels: tendenciaLabels,
-                datasets: [
-                    {
-                        label: "Entradas",
-                        data: tendenciaEntradas,
-                        borderColor: "#3ecf8e",
-                        backgroundColor: "rgba(62, 207, 142, 0.1)",
-                        tension: 0.4,
-                        fill: true,
-                        pointRadius: 5,
-                        pointBackgroundColor: "#3ecf8e",
-                        pointHoverRadius: 7
-                    },
-                    {
-                        label: "Saídas",
-                        data: tendenciaSaidas,
-                        borderColor: "#f87171",
-                        backgroundColor: "rgba(248, 113, 113, 0.1)",
-                        tension: 0.4,
-                        fill: true,
-                        pointRadius: 5,
-                        pointBackgroundColor: "#f87171",
-                        pointHoverRadius: 7
-                    },
-                    {
-                        label: "Saldo",
-                        data: tendenciaSaldo,
-                        borderColor: "#60a5fa",
-                        backgroundColor: "rgba(96, 165, 250, 0.1)",
-                        tension: 0.4,
-                        fill: true,
-                        pointRadius: 5,
-                        pointBackgroundColor: "#60a5fa",
-                        pointHoverRadius: 7
-                    }
-                ]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        display: true,
-                        labels: {
-                            color: "#d4d4d8",
-                            padding: 15,
-                            font: { size: 13 }
-                        }
-                    },
-                    tooltip: {
-                        callbacks: {
-                            label: function(context) {
-                                return context.dataset.label + ": R$ " + Number(context.raw).toFixed(2);
+            const dadosValidos = dadosParseados
+                && tendenciaLabels.length
+                && tendenciaLabels.length === tendenciaEntradas.length
+                && tendenciaLabels.length === tendenciaSaidas.length
+                && tendenciaLabels.length === tendenciaSaldo.length;
+            const semDados = dadosValidos
+                && [...tendenciaEntradas, ...tendenciaSaidas, ...tendenciaSaldo]
+                    .every((valor) => Number(valor || 0) === 0);
+
+            if (!dadosValidos) {
+                mostrarAvisoTendencia("Não foi possível ler os dados da tendência agora.");
+            } else if (semDados) {
+                mostrarAvisoTendencia("Nenhuma movimentação nos últimos 6 meses deste período.");
+            } else {
+                new Chart(canvasTendencia, {
+                    type: "line",
+                    data: {
+                        labels: tendenciaLabels,
+                        datasets: [
+                            {
+                                label: "Entradas",
+                                data: tendenciaEntradas,
+                                borderColor: "#3ecf8e",
+                                backgroundColor: "rgba(62, 207, 142, 0.1)",
+                                tension: 0.4,
+                                fill: true,
+                                pointRadius: 5,
+                                pointBackgroundColor: "#3ecf8e",
+                                pointHoverRadius: 7
+                            },
+                            {
+                                label: "Saídas",
+                                data: tendenciaSaidas,
+                                borderColor: "#f87171",
+                                backgroundColor: "rgba(248, 113, 113, 0.1)",
+                                tension: 0.4,
+                                fill: true,
+                                pointRadius: 5,
+                                pointBackgroundColor: "#f87171",
+                                pointHoverRadius: 7
+                            },
+                            {
+                                label: "Saldo",
+                                data: tendenciaSaldo,
+                                borderColor: "#60a5fa",
+                                backgroundColor: "rgba(96, 165, 250, 0.1)",
+                                tension: 0.4,
+                                fill: true,
+                                pointRadius: 5,
+                                pointBackgroundColor: "#60a5fa",
+                                pointHoverRadius: 7
                             }
-                        }
-                    }
-                },
-                scales: {
-                    x: {
-                        ticks: { color: "#a1a1aa" },
-                        grid: { display: false }
+                        ]
                     },
-                    y: {
-                        beginAtZero: true,
-                        ticks: {
-                            color: "#a1a1aa",
-                            callback: function(value) {
-                                return "R$ " + value;
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                display: true,
+                                labels: {
+                                    color: "#d4d4d8",
+                                    padding: 15,
+                                    font: { size: 13 }
+                                }
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        return context.dataset.label + ": " + formatarMoedaTendencia.format(Number(context.raw || 0));
+                                    }
+                                }
                             }
                         },
-                        grid: { color: "rgba(255,255,255,0.05)" }
+                        scales: {
+                            x: {
+                                ticks: { color: "#a1a1aa" },
+                                grid: { display: false }
+                            },
+                            y: {
+                                beginAtZero: true,
+                                ticks: {
+                                    color: "#a1a1aa",
+                                    callback: function(value) {
+                                        return formatarMoedaTendencia.format(Number(value || 0));
+                                    }
+                                },
+                                grid: { color: "rgba(255,255,255,0.05)" }
+                            }
+                        }
                     }
-                }
+                });
             }
-        });
         }
     }
 </script>
