@@ -4,16 +4,12 @@ from decorators import login_required
 from db import conectar
 from datetime import datetime, date
 import calendar
+from utils import redirecionar_dashboard
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 gastos_fixos_bp = Blueprint("gastos_fixos", __name__)
-
-def redirecionar_dashboard(mensagem, categoria):
-    flash(mensagem, categoria)
-    return redirect(url_for("dashboard.app_dashboard"))
-
 
 @gastos_fixos_bp.route("/add_gasto_fixo", methods=["POST"])
 @login_required

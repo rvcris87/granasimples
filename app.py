@@ -5,12 +5,14 @@ from flask import Flask, render_template
 from dotenv import load_dotenv
 from flask_wtf.csrf import CSRFProtect, CSRFError
 
-from routes.auth import auth_bp
-from routes.dashboard import dashboard_bp
-from routes.transacoes import transacoes_bp
-from routes.metas import metas_bp
-from routes.categorias import categorias_bp
-from routes.gastos_fixos import gastos_fixos_bp
+from routes import (
+    auth_bp,
+    dashboard_bp,
+    transacoes_bp,
+    metas_bp,
+    categorias_bp,
+    gastos_fixos_bp,
+)
 
 base_dir = Path(__file__).resolve().parent
 load_dotenv(dotenv_path=base_dir / ".env")

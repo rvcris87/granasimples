@@ -2,10 +2,20 @@ import re
 import logging
 from datetime import date, datetime, timedelta
 import calendar
+from flask import flash, redirect, url_for
 from db import conectar
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
+
+def redirecionar_dashboard(mensagem, categoria):
+    flash(mensagem, categoria)
+    return redirect(url_for("dashboard.app_dashboard"))
+
+
+def normalizar_texto(texto):
+    return " ".join(texto.split())
 
 
 def parse_mes(mes):
@@ -171,20 +181,31 @@ def calcular_dados_dashboard(usuario_id, mes="", conn=None):
     # gráfico por categoria REAL
     cur.execute(f"""
         SELECT
+            COALESCE(c.id::text, 'sem-categoria') AS categoria_chave,
             COALESCE(c.nome, 'Sem categoria') AS categoria_nome,
             COALESCE(SUM(t.valor), 0) AS total
         FROM transacoes t
-        LEFT JOIN categorias c ON t.categoria_id = c.id
+        LEFT JOIN categorias c
+          ON t.categoria_id = c.id
+         AND c.usuario_id = t.usuario_id
         WHERE t.usuario_id = %s
           AND t.tipo = 'saida'
           {filtro_mes}
-        GROUP BY COALESCE(c.nome, 'Sem categoria')
+        GROUP BY COALESCE(c.id::text, 'sem-categoria'), COALESCE(c.nome, 'Sem categoria')
         ORDER BY total DESC
     """, params)
     dados_categorias = cur.fetchall()
 
-    categorias_labels = [linha["categoria_nome"] for linha in dados_categorias]
-    categorias_valores = [float(linha["total"]) for linha in dados_categorias]
+    limite_categorias = 8
+    categorias_principais = dados_categorias[:limite_categorias]
+    categorias_restantes = dados_categorias[limite_categorias:]
+
+    categorias_labels = [linha["categoria_nome"] for linha in categorias_principais]
+    categorias_valores = [float(linha["total"]) for linha in categorias_principais]
+
+    if categorias_restantes:
+        categorias_labels.append("Outras")
+        categorias_valores.append(float(sum(linha["total"] or 0 for linha in categorias_restantes)))
     
     # ==== INTELIGÊNCIA DO DASHBOARD ====
     comparacao_percentual = 0
@@ -280,25 +301,35 @@ def calcular_dados_dashboard(usuario_id, mes="", conn=None):
         "alertas": alertas
     }
 
-def buscar_categorias(usuario_id, tipo=None, conn=None):
+def buscar_categorias(usuario_id, tipo=None, incluir_sistema=False, conn=None):
     fechar_conn = conn is None
     conn = conn or conectar()
     cur = conn.cursor()
 
+    query = """
+        SELECT id, nome, tipo
+        FROM categorias
+        WHERE usuario_id = %s
+    """
+    params = [usuario_id]
+
     if tipo:
-        cur.execute("""
-            SELECT id, nome, tipo
-            FROM categorias
-            WHERE usuario_id = %s AND tipo = %s
-            ORDER BY nome ASC
-        """, (usuario_id, tipo))
+        query += " AND tipo = %s"
+        params.append(tipo)
+
+    if not incluir_sistema:
+        query += """
+            AND nome NOT ILIKE %s
+            AND nome NOT ILIKE %s
+        """
+        params.extend(["Meta entrada:%", "Meta saída:%"])
+
+    if tipo:
+        query += " ORDER BY nome ASC"
     else:
-        cur.execute("""
-            SELECT id, nome, tipo
-            FROM categorias
-            WHERE usuario_id = %s
-            ORDER BY tipo ASC, nome ASC
-        """, (usuario_id,))
+        query += " ORDER BY tipo ASC, nome ASC"
+
+    cur.execute(query, params)
 
     categorias = cur.fetchall()
     if fechar_conn:

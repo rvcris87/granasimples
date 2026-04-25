@@ -1,18 +1,14 @@
-from flask import Blueprint, request, redirect, url_for, session, flash
+from flask import Blueprint, request, session
 import logging
 from decorators import login_required
 from db import conectar
 from datetime import datetime
+from utils import redirecionar_dashboard
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 transacoes_bp = Blueprint("transacoes", __name__)
-
-
-def redirecionar_dashboard(mensagem, categoria):
-    flash(mensagem, categoria)
-    return redirect(url_for("dashboard.app_dashboard"))
 
 
 def validar_valor(valor):

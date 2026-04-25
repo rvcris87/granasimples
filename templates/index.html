@@ -58,7 +58,7 @@
         <p>Resumo das suas finanças</p>
     </div>
 
-    <form method="GET" action="/app">
+    <form method="GET" action="{{ url_for('dashboard.app_dashboard') }}">
         <input type="month" name="mes" value="{{ mes }}">
         <button class="btn">Filtrar</button>
     </form>
@@ -196,6 +196,10 @@
 
         const totalEntradas = parseFloat(dadosGraficos.dataset.entradas || 0);
         const totalSaidas = parseFloat(dadosGraficos.dataset.saidas || 0);
+        const formatarMoeda = new Intl.NumberFormat("pt-BR", {
+            style: "currency",
+            currency: "BRL"
+        });
 
         let categoriasLabels = [];
         let categoriasValores = [];
@@ -264,70 +268,76 @@
         if (canvasCategorias) {
             const semDados = !categoriasLabels.length || !categoriasValores.length;
 
-            new Chart(canvasCategorias, {
-                type: "bar",
-                data: {
-                    labels: semDados ? ["Sem dados"] : categoriasLabels,
-                    datasets: [{
-                        label: "Gastos por categoria",
-                        data: semDados ? [0] : categoriasValores,
-                        backgroundColor: [
-                            "#60a5fa",
-                            "#34d399",
-                            "#fbbf24",
-                            "#f87171",
-                            "#a78bfa",
-                            "#22d3ee",
-                            "#fb7185",
-                            "#94a3b8"
-                        ],
-                        borderRadius: 12,
-                        borderSkipped: false,
-                        maxBarThickness: 70
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            display: false
-                        },
-                        tooltip: {
-                            callbacks: {
-                                label: function(context) {
-                                    return "R$ " + Number(context.raw).toFixed(2);
-                                }
-                            }
-                        }
+            if (semDados) {
+                mostrarAvisoGrafico(canvasCategorias, "Nenhum gasto por categoria neste período.");
+            } else {
+                new Chart(canvasCategorias, {
+                    type: "bar",
+                    data: {
+                        labels: categoriasLabels,
+                        datasets: [{
+                            label: "Gastos por categoria",
+                            data: categoriasValores,
+                            backgroundColor: [
+                                "#60a5fa",
+                                "#34d399",
+                                "#fbbf24",
+                                "#f87171",
+                                "#a78bfa",
+                                "#22d3ee",
+                                "#fb7185",
+                                "#94a3b8",
+                                "#c084fc"
+                            ],
+                            borderRadius: 12,
+                            borderSkipped: false,
+                            maxBarThickness: 46
+                        }]
                     },
-                    scales: {
-                        x: {
-                            ticks: {
-                                color: "#a1a1aa",
-                                font: {
-                                    size: 13
-                                }
-                            },
-                            grid: {
+                    options: {
+                        indexAxis: "y",
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
                                 display: false
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        return formatarMoeda.format(Number(context.raw || 0));
+                                    }
+                                }
                             }
                         },
-                        y: {
-                            beginAtZero: true,
-                            ticks: {
-                                color: "#a1a1aa",
-                                callback: function(value) {
-                                    return "R$ " + value;
+                        scales: {
+                            x: {
+                                beginAtZero: true,
+                                ticks: {
+                                    color: "#a1a1aa",
+                                    callback: function(value) {
+                                        return formatarMoeda.format(Number(value || 0));
+                                    }
+                                },
+                                grid: {
+                                    color: "rgba(255,255,255,0.05)"
                                 }
                             },
-                            grid: {
-                                color: "rgba(255,255,255,0.05)"
+                            y: {
+                                ticks: {
+                                    color: "#a1a1aa",
+                                    font: {
+                                        size: 13
+                                    }
+                                },
+                                grid: {
+                                    display: false
+                                }
                             }
                         }
                     }
-                }
-            });
+                });
+            }
         }
 
         function filtrarCategorias(tipoSelect, categoriaSelect) {

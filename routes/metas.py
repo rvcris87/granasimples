@@ -1,9 +1,10 @@
 from decimal import Decimal, InvalidOperation
 import logging
-from flask import Blueprint, request, redirect, url_for, session, flash
+from flask import Blueprint, request, session
 
 from decorators import login_required
 from db import conectar
+from utils import normalizar_texto, redirecionar_dashboard
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -11,13 +12,8 @@ logger = logging.getLogger(__name__)
 metas_bp = Blueprint("metas", __name__)
 
 
-def redirecionar_dashboard(mensagem, categoria):
-    flash(mensagem, categoria)
-    return redirect(url_for("dashboard.app_dashboard"))
-
-
 def normalizar_titulo(titulo):
-    return " ".join(titulo.split())
+    return normalizar_texto(titulo)
 
 
 def validar_titulo(titulo):
@@ -410,4 +406,3 @@ def delete_meta(meta_id):
     finally:
         if conn:
             conn.close()
-

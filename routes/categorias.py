@@ -1,7 +1,8 @@
-from flask import Blueprint, request, redirect, url_for, session, flash
+from flask import Blueprint, request, session
 import logging
 from decorators import login_required
 from db import conectar
+from utils import normalizar_texto, redirecionar_dashboard
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -9,13 +10,8 @@ logger = logging.getLogger(__name__)
 categorias_bp = Blueprint("categorias", __name__)
 
 
-def redirecionar_dashboard(mensagem, categoria):
-    flash(mensagem, categoria)
-    return redirect(url_for("dashboard.app_dashboard"))
-
-
 def normalizar_nome(nome):
-    return " ".join(nome.split())
+    return normalizar_texto(nome)
 
 
 def validar_categoria(nome, tipo):

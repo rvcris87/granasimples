@@ -3,7 +3,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 import logging
 
 from db import conectar
-from decorators import is_safe_url
+from decorators import is_safe_url, login_required
 from utils import (
     email_valido,
     senha_valida,
@@ -162,6 +162,7 @@ def register():
 
 
 @auth_bp.route("/logout", methods=["POST"])
+@login_required
 def logout():
     session.clear()
     return redirect(url_for("home"))

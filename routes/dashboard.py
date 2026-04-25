@@ -1,6 +1,6 @@
 import os
 import logging
-from flask import Blueprint, render_template, request, session, redirect, url_for, abort
+from flask import Blueprint, render_template, request, session, abort
 from decorators import login_required
 from utils import (
     calcular_dados_dashboard, 
