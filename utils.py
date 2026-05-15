@@ -309,6 +309,115 @@ def calcular_dados_dashboard(usuario_id, mes="", conn=None):
         "alertas": alertas
     }
 
+
+def obter_inteligencia_financeira(usuario_id, conn=None):
+    fechar_conn = conn is None
+    conn = conn or conectar()
+    cur = conn.cursor()
+
+    inicio_mes_atual = date.today().replace(day=1)
+    fim_mes_atual = adicionar_meses(inicio_mes_atual, 1)
+    inicio_mes_anterior = adicionar_meses(inicio_mes_atual, -1)
+    fim_mes_anterior = inicio_mes_atual
+
+    cur.execute("""
+        SELECT
+            COALESCE(SUM(CASE
+                WHEN t.data >= %s AND t.data < %s THEN t.valor
+                ELSE 0
+            END), 0) AS total_atual,
+            COALESCE(SUM(CASE
+                WHEN t.data >= %s AND t.data < %s THEN t.valor
+                ELSE 0
+            END), 0) AS total_anterior,
+            COUNT(CASE
+                WHEN t.data >= %s AND t.data < %s THEN 1
+            END) AS qtd_atual,
+            COUNT(CASE
+                WHEN t.data >= %s AND t.data < %s THEN 1
+            END) AS qtd_anterior
+        FROM transacoes t
+        LEFT JOIN categorias c
+          ON t.categoria_id = c.id
+         AND c.usuario_id = t.usuario_id
+        WHERE t.usuario_id = %s
+          AND t.tipo = 'saida'
+          AND t.data >= %s
+          AND t.data < %s
+    """, (
+        inicio_mes_atual, fim_mes_atual,
+        inicio_mes_anterior, fim_mes_anterior,
+        inicio_mes_atual, fim_mes_atual,
+        inicio_mes_anterior, fim_mes_anterior,
+        usuario_id,
+        inicio_mes_anterior, fim_mes_atual
+    ))
+    totais = cur.fetchone() or {}
+
+    total_atual = float(totais.get("total_atual") or 0)
+    total_anterior = float(totais.get("total_anterior") or 0)
+    qtd_atual = int(totais.get("qtd_atual") or 0)
+    qtd_anterior = int(totais.get("qtd_anterior") or 0)
+
+    cur.execute("""
+        SELECT
+            COALESCE(c.nome, 'Sem categoria') AS categoria_nome,
+            COALESCE(SUM(t.valor), 0) AS total
+        FROM transacoes t
+        LEFT JOIN categorias c
+          ON t.categoria_id = c.id
+         AND c.usuario_id = t.usuario_id
+        WHERE t.usuario_id = %s
+          AND t.tipo = 'saida'
+          AND t.data >= %s
+          AND t.data < %s
+        GROUP BY COALESCE(c.nome, 'Sem categoria')
+        ORDER BY total DESC
+        LIMIT 1
+    """, (usuario_id, inicio_mes_atual, fim_mes_atual))
+    categoria = cur.fetchone()
+
+    maior_categoria = categoria["categoria_nome"] if categoria else ""
+    valor_maior_categoria = float(categoria["total"] or 0) if categoria else 0.0
+    diferenca_valor = total_atual - total_anterior
+    diferenca_percentual = 0.0
+    status_comparacao = "neutro"
+
+    if total_anterior > 0:
+        diferenca_percentual = (diferenca_valor / total_anterior) * 100
+        if diferenca_percentual > 0:
+            status_comparacao = "negativo"
+            alerta_gastos = f"Voce gastou {abs(diferenca_percentual):.0f}% a mais que no mes anterior."
+        elif diferenca_percentual < 0:
+            status_comparacao = "positivo"
+            alerta_gastos = f"Parabens! Voce reduziu seus gastos em {abs(diferenca_percentual):.0f}%."
+        else:
+            alerta_gastos = "Seus gastos ficaram iguais aos do mes anterior."
+    elif total_atual > 0:
+        status_comparacao = "neutro"
+        alerta_gastos = "Voce teve gastos neste mes, mas ainda nao havia gastos no mes anterior para comparar."
+    elif qtd_atual == 0 and qtd_anterior == 0:
+        status_comparacao = "neutro"
+        alerta_gastos = "Ainda nao ha transacoes suficientes para gerar uma comparacao inteligente."
+    else:
+        status_comparacao = "positivo"
+        alerta_gastos = "Neste mes ainda nao ha gastos registrados. Bom momento para planejar antes de gastar."
+
+    if fechar_conn:
+        conn.close()
+
+    return {
+        "total_gastos_mes_atual": total_atual,
+        "total_gastos_mes_anterior": total_anterior,
+        "diferenca_valor": diferenca_valor,
+        "diferenca_percentual": diferenca_percentual,
+        "maior_categoria": maior_categoria,
+        "valor_maior_categoria": valor_maior_categoria,
+        "alerta_gastos": alerta_gastos,
+        "status_comparacao": status_comparacao
+    }
+
+
 def buscar_categorias(usuario_id, tipo=None, incluir_sistema=False, conn=None):
     fechar_conn = conn is None
     conn = conn or conectar()

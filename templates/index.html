@@ -82,6 +82,79 @@
     </div>
 </section>
 
+<!-- INTELIGENCIA FINANCEIRA -->
+<section class="inteligencia-section">
+    <div class="inteligencia-header">
+        <div>
+            <h2>Inteligência Financeira</h2>
+            <p>Leitura rápida dos seus gastos neste mês</p>
+        </div>
+        <span class="inteligencia-badge">
+            <i class="fa-solid fa-wand-magic-sparkles"></i>
+        </span>
+    </div>
+
+    <div class="inteligencia-grid">
+        <div class="inteligencia-card">
+            <span>Total gasto no mês atual</span>
+            <strong>R$ {{ "%.2f"|format(inteligencia.total_gastos_mes_atual or 0) }}</strong>
+            <p>Você gastou R$ {{ "%.2f"|format(inteligencia.total_gastos_mes_atual or 0) }} neste mês.</p>
+        </div>
+
+        <div class="inteligencia-card">
+            <span>Total gasto no mês anterior</span>
+            <strong>R$ {{ "%.2f"|format(inteligencia.total_gastos_mes_anterior or 0) }}</strong>
+            <p>No mês anterior, seus gastos foram R$ {{ "%.2f"|format(inteligencia.total_gastos_mes_anterior or 0) }}.</p>
+        </div>
+
+        <div class="inteligencia-card">
+            <span>Diferença percentual</span>
+            <strong>
+                {% if inteligencia.diferenca_percentual > 0 %}+{% endif %}{{ "%.1f"|format(inteligencia.diferenca_percentual or 0) }}%
+            </strong>
+            <p>
+                {% if inteligencia.total_gastos_mes_anterior > 0 %}
+                    {% if inteligencia.diferenca_percentual > 0 %}
+                        Você gastou {{ "%.1f"|format(inteligencia.diferenca_percentual) }}% a mais que no mês anterior.
+                    {% elif inteligencia.diferenca_percentual < 0 %}
+                        Parabéns! Você reduziu seus gastos em {{ "%.1f"|format((inteligencia.diferenca_percentual * -1)) }}%.
+                    {% else %}
+                        Seus gastos ficaram iguais aos do mês anterior.
+                    {% endif %}
+                {% else %}
+                    Ainda não há base anterior suficiente para comparar em percentual.
+                {% endif %}
+            </p>
+        </div>
+
+        <div class="inteligencia-card">
+            <span>Maior categoria de gasto</span>
+            <strong>{{ inteligencia.maior_categoria or "Sem dados" }}</strong>
+            <p>
+                {% if inteligencia.maior_categoria %}
+                    Sua maior categoria de gasto foi {{ inteligencia.maior_categoria }}, com R$ {{ "%.2f"|format(inteligencia.valor_maior_categoria or 0) }}.
+                {% else %}
+                    Registre saídas neste mês para identificar sua maior categoria.
+                {% endif %}
+            </p>
+        </div>
+
+        <div class="inteligencia-card inteligencia-alerta alerta-{{ inteligencia.status_comparacao or 'neutro' }}">
+            <span>Alerta financeiro</span>
+            <strong>
+                {% if inteligencia.status_comparacao == "positivo" %}
+                    Boa evolução
+                {% elif inteligencia.status_comparacao == "negativo" %}
+                    Atenção aos gastos
+                {% else %}
+                    Acompanhamento
+                {% endif %}
+            </strong>
+            <p>{{ inteligencia.alerta_gastos }}</p>
+        </div>
+    </div>
+</section>
+
 <section class="dashboard-grid">
 
 <!-- COLUNA PRINCIPAL -->

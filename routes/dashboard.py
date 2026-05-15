@@ -11,6 +11,7 @@ from utils import (
     buscar_gastos_fixos,
     calcular_insights_gastos_fixos,
     verificar_lancamentos_pendentes,
+    obter_inteligencia_financeira,
     parse_mes
 )
 from db import conectar
@@ -52,6 +53,7 @@ def app_dashboard():
         gastos_fixos = buscar_gastos_fixos(usuario_id, conn=conn) or []
         insights_gastos_fixos = calcular_insights_gastos_fixos(usuario_id, dados["total_saidas"], conn=conn)
         lancamentos_pendentes = verificar_lancamentos_pendentes(usuario_id, conn=conn) or {"possui_pendentes": False, "quantidade": 0, "mensagem": ""}
+        inteligencia = obter_inteligencia_financeira(usuario_id, conn=conn)
 
     except Exception as e:
         logger.exception(f"Erro ao carregar dashboard para usuário {usuario_id}: {e}")
@@ -95,6 +97,7 @@ def app_dashboard():
         mensagem_gastos_fixos=insights_gastos_fixos.get("mensagem_gastos_fixos", ""),
         alertas_gastos_fixos=insights_gastos_fixos.get("alertas_gastos_fixos", []),
         lancamentos_pendentes=lancamentos_pendentes,
+        inteligencia=inteligencia,
         mes=mes
     )
 
