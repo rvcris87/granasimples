@@ -1,6 +1,7 @@
 import os
 import logging
 from flask import Blueprint, render_template, request, session, abort
+from psycopg2 import OperationalError
 from decorators import login_required
 from utils import (
     calcular_dados_dashboard, 
@@ -14,7 +15,7 @@ from utils import (
     obter_inteligencia_financeira,
     parse_mes
 )
-from db import conectar
+from db import conectar, DatabaseConfigError
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -55,6 +56,14 @@ def app_dashboard():
         lancamentos_pendentes = verificar_lancamentos_pendentes(usuario_id, conn=conn) or {"possui_pendentes": False, "quantidade": 0, "mensagem": ""}
         inteligencia = obter_inteligencia_financeira(usuario_id, conn=conn)
 
+    except (OperationalError, DatabaseConfigError) as e:
+        logger.exception(f"Erro de conexão com o banco ao carregar dashboard para usuário {usuario_id}: {e}")
+        return render_template(
+            "erro.html",
+            codigo=503,
+            titulo="Banco indisponível",
+            mensagem="Não foi possível conectar ao banco de dados. Verifique as credenciais do Supabase e tente novamente."
+        ), 503
     except Exception as e:
         logger.exception(f"Erro ao carregar dashboard para usuário {usuario_id}: {e}")
         return render_template(
