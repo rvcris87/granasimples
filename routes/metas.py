@@ -240,6 +240,75 @@ def retirar_valor_meta(meta_id):
             conn.close()
 
 
+@metas_bp.route("/usar_saldo_meta/<int:meta_id>", methods=["POST"])
+@login_required
+def usar_saldo_meta(meta_id):
+    usuario_id = session["usuario_id"]
+    valor_str = request.form.get("valor_usar_saldo", "").strip()
+
+    if not valor_str:
+        return redirecionar_dashboard("Informe um valor do saldo para usar na meta.", "erro")
+
+    valor, erro = parse_valor(valor_str)
+    if erro:
+        return redirecionar_dashboard("Valor inválido para usar saldo na meta.", "erro")
+
+    conn = None
+    try:
+        conn = conectar()
+        cur = conn.cursor()
+
+        cur.execute("""
+            SELECT id, titulo, valor_atual, valor_meta
+            FROM metas
+            WHERE id = %s AND usuario_id = %s
+        """, (meta_id, usuario_id))
+        meta = cur.fetchone()
+
+        if not meta:
+            return redirecionar_dashboard("Meta não encontrada.", "erro")
+
+        cur.execute("""
+            SELECT
+                COALESCE(SUM(CASE WHEN tipo = 'entrada' THEN valor ELSE 0 END), 0) -
+                COALESCE(SUM(CASE WHEN tipo = 'saida' THEN valor ELSE 0 END), 0) AS saldo
+            FROM transacoes
+            WHERE usuario_id = %s
+        """, (usuario_id,))
+        saldo_disponivel = Decimal(cur.fetchone()["saldo"] or 0)
+
+        if saldo_disponivel < valor:
+            return redirecionar_dashboard("Saldo insuficiente para enviar esse valor para a meta.", "erro")
+
+        novo_valor_atual = Decimal(meta["valor_atual"] or 0) + valor
+
+        if novo_valor_atual > Decimal(meta["valor_meta"]):
+            return redirecionar_dashboard("O valor informado excede o limite da meta.", "erro")
+
+        cur.execute("""
+            UPDATE metas
+            SET valor_atual = %s
+            WHERE id = %s AND usuario_id = %s
+        """, (novo_valor_atual, meta_id, usuario_id))
+
+        cur.execute("""
+            INSERT INTO transacoes (usuario_id, descricao, valor, tipo, data, meta_id)
+            VALUES (%s, %s, %s, 'saida', CURRENT_DATE, %s)
+        """, (usuario_id, f"Uso de saldo para meta: {meta['titulo']}", valor, meta_id))
+
+        conn.commit()
+        return redirecionar_dashboard("Saldo enviado para a meta com sucesso.", "sucesso")
+
+    except Exception as e:
+        if conn:
+            conn.rollback()
+        logger.exception(f"Erro ao usar saldo na meta {meta_id} para usuário {usuario_id}: {e}")
+        return redirecionar_dashboard("Não foi possível usar o saldo na meta. Tente novamente.", "erro")
+    finally:
+        if conn:
+            conn.close()
+
+
 @metas_bp.route("/editar_meta/<int:meta_id>", methods=["POST"])
 @login_required
 def editar_meta(meta_id):

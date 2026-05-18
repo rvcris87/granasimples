@@ -3,79 +3,291 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Grana Simples</title>
+    <title>GranaSimples - Controle seu dinheiro sem complicação</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <script src="{{ url_for('static', filename='js/theme.js') }}"></script>
 </head>
 <body class="landing-page">
 
 <div class="landing-container">
-
     <header class="landing-header">
-        <a href="/" class="logo">Grana Simples</a>
+        <a href="/" class="brand-lockup" aria-label="GranaSimples">
+            <span class="brand-mark">G</span>
+            <span>GranaSimples</span>
+        </a>
 
-        <nav class="nav-links">
-            <a href="#recursos">Recursos</a>
-            <a href="/login">Entrar</a>
-            <a href="/register" class="btn">Criar conta</a>
+        <nav class="nav-links" data-mobile-nav>
+            <a href="#inicio">Início</a>
+            <a href="#funcionalidades">Funcionalidades</a>
+            <a href="#dashboard">Dashboard</a>
+            <a href="#metas">Metas</a>
+            <a href="#faq">FAQ</a>
+            <a href="{{ url_for('auth.login') }}">Entrar</a>
         </nav>
+
+        <div class="landing-actions">
+            <button class="theme-toggle" type="button" data-theme-toggle aria-label="Alternar tema">
+                <i class="fa-solid fa-moon theme-icon-moon"></i>
+                <i class="fa-solid fa-sun theme-icon-sun"></i>
+            </button>
+            <a href="{{ url_for('auth.register') }}" class="btn">Criar conta</a>
+            <button class="mobile-nav-toggle" type="button" data-mobile-nav-toggle aria-label="Abrir menu" aria-expanded="false">
+                <i class="fa-solid fa-bars"></i>
+            </button>
+        </div>
     </header>
 
-    <main class="hero">
-
+    <main id="inicio" class="hero">
         <section class="hero-text">
-            <h1>Controle total da sua vida financeira</h1>
-
-            <p>
-                Organize suas finanças de forma simples, clara e eficiente.
-                Acompanhe seus gastos, registre suas despesas e tenha controle
-                real do seu dinheiro.
-            </p>
+            <span class="hero-badge">
+                <i class="fa-solid fa-wand-magic-sparkles"></i>
+                Produto financeiro simples, visual e inteligente
+            </span>
+            <h1>Controle seu dinheiro sem complicação.</h1>
+            <p>Organize entradas, gastos, metas e categorias em um painel simples, visual e inteligente.</p>
 
             <div class="hero-actions">
-                <a href="/register" class="btn">Começar agora</a>
-                <a href="/login" class="btn btn-secundario">Já tenho conta</a>
+                <a href="{{ url_for('auth.register') }}" class="btn">Começar agora</a>
+                <a href="#funcionalidades" class="btn btn-secundario">Ver funcionalidades</a>
             </div>
 
-            <ul class="hero-list" id="recursos">
-                <li>Controle de entradas e saídas</li>
-                <li>Gastos organizados por categoria</li>
-                <li>Gráficos automáticos</li>
-                <li>Metas financeiras inteligentes</li>
+            <ul class="hero-proof">
+                <li><i class="fa-solid fa-check"></i> Dashboard claro</li>
+                <li><i class="fa-solid fa-check"></i> Metas acompanháveis</li>
+                <li><i class="fa-solid fa-check"></i> Insights úteis</li>
             </ul>
         </section>
 
-        <aside class="hero-card">
-            <h3>Seu painel financeiro</h3>
+        <section class="hero-visual" aria-label="Prévia do painel financeiro">
+            <div class="floating-card card-balance">
+                <span>Saldo real</span>
+                <strong>Ao entrar</strong>
+            </div>
 
-            <p>
-                Visual moderno, simples e poderoso para você entender
-                seu dinheiro de verdade.
-            </p>
-
-            <div class="mini-stats">
-                <div class="mini-stat">
-                    <span>Controle</span>
-                    <strong>Entradas e saídas</strong>
+            <div class="dashboard-mockup">
+                <div class="mockup-top">
+                    <div class="mockup-dots"><span></span><span></span><span></span></div>
+                    <span class="mockup-title">Painel mensal</span>
                 </div>
 
-                <div class="mini-stat">
-                    <span>Planejamento</span>
-                    <strong>Metas financeiras</strong>
-                </div>
-
-                <div class="mini-stat">
-                    <span>Visual</span>
-                    <strong>Gráficos automáticos</strong>
+                <div class="mockup-grid">
+                    <div class="mock-card large">
+                        <span>Evolução financeira</span>
+                        <div class="mock-chart">
+                            <i style="height: 42%"></i>
+                            <i style="height: 70%"></i>
+                            <i style="height: 56%"></i>
+                            <i style="height: 88%"></i>
+                            <i style="height: 64%"></i>
+                            <i style="height: 96%"></i>
+                        </div>
+                    </div>
+                    <div class="mock-card">
+                        <span>Entradas</span>
+                        <strong>Dados reais</strong>
+                    </div>
+                    <div class="mock-card">
+                        <span>Saídas</span>
+                        <strong>Dados reais</strong>
+                    </div>
+                    <div class="mock-card large">
+                        <div class="mock-row">
+                            <span>Casa</span>
+                            <strong>Categoria</strong>
+                        </div>
+                        <div class="mock-row">
+                            <span>Mercado</span>
+                            <strong>Categoria</strong>
+                        </div>
+                        <div class="mock-row">
+                            <span>Meta viagem</span>
+                            <strong>Progresso</strong>
+                        </div>
+                    </div>
                 </div>
             </div>
-        </aside>
 
+            <div class="floating-card card-goal">
+                <span>Meta viagem</span>
+                <strong>Progresso</strong>
+            </div>
+
+            <div class="floating-card card-insight">
+                <span>Insight</span>
+                <strong>Comparação gerada com seus dados.</strong>
+            </div>
+        </section>
     </main>
 
-    <footer class="landing-footer">
-        © 2026 Grana Simples. Todos os direitos reservados.
-    </footer>
+    <section id="funcionalidades" class="landing-section">
+        <p class="section-eyebrow">Funcionalidades</p>
+        <h2 class="section-title">Tudo que você precisa em um só lugar</h2>
+        <p class="section-copy">O GranaSimples organiza a rotina financeira com estrutura de app real e visual de produto premium.</p>
 
+        <div class="feature-grid">
+            <article class="feature-card">
+                <div class="feature-icon"><i class="fa-solid fa-arrow-right-arrow-left"></i></div>
+                <span>Fluxo</span>
+                <h3>Controle de entradas e saídas</h3>
+                <p>Registre movimentações, entenda o saldo e acompanhe o mês com clareza.</p>
+            </article>
+
+            <article class="feature-card">
+                <div class="feature-icon"><i class="fa-solid fa-tags"></i></div>
+                <span>Organização</span>
+                <h3>Categorias inteligentes</h3>
+                <p>Separe receitas e despesas para enxergar onde seu dinheiro está indo.</p>
+            </article>
+
+            <article class="feature-card" id="metas">
+                <div class="feature-icon"><i class="fa-solid fa-bullseye"></i></div>
+                <span>Planejamento</span>
+                <h3>Metas financeiras</h3>
+                <p>Acompanhe progresso, valores guardados e próximos passos sem planilhas confusas.</p>
+            </article>
+
+            <article class="feature-card">
+                <div class="feature-icon"><i class="fa-solid fa-rotate"></i></div>
+                <span>Recorrência</span>
+                <h3>Gastos fixos</h3>
+                <p>Visualize contas recorrentes, vencimentos e impacto no orçamento mensal.</p>
+            </article>
+
+            <article class="feature-card">
+                <div class="feature-icon"><i class="fa-solid fa-chart-line"></i></div>
+                <span>Relatórios</span>
+                <h3>Relatórios visuais</h3>
+                <p>Gráficos de entradas, saídas, categorias e tendência para decisões melhores.</p>
+            </article>
+
+            <article class="feature-card">
+                <div class="feature-icon"><i class="fa-solid fa-wand-magic-sparkles"></i></div>
+                <span>Clareza</span>
+                <h3>Insights financeiros</h3>
+                <p>Alertas simples para perceber mudanças de comportamento e evitar surpresas.</p>
+            </article>
+        </div>
+    </section>
+
+    <section id="dashboard" class="landing-section">
+        <div class="preview-band">
+            <div class="preview-band-inner">
+                <div>
+                    <p class="section-eyebrow">Dashboard</p>
+                    <h2 class="section-title section-title-left">Um painel financeiro com cara de produto final</h2>
+                    <p class="section-copy section-copy-left">A estrutura interna segue a lógica de sistema: cards financeiros, gráficos, formulários rápidos, transações recentes, metas e gastos fixos no mesmo fluxo.</p>
+                    <div class="hero-actions">
+                        <a href="{{ url_for('auth.register') }}" class="btn">Abrir meu painel</a>
+                        <a href="{{ url_for('auth.login') }}" class="btn btn-secundario">Já tenho conta</a>
+                    </div>
+                </div>
+
+                <div class="app-preview-shell">
+                    <div class="app-preview-top">
+                        <strong>Resumo mensal</strong>
+                        <span class="badge badge-neutro">Dados reais no painel</span>
+                    </div>
+                    <div class="app-preview-stats">
+                        <div class="app-stat"><span>Entradas</span><strong>Do banco</strong></div>
+                        <div class="app-stat"><span>Saídas</span><strong>Do banco</strong></div>
+                        <div class="app-stat"><span>Saldo</span><strong>Do banco</strong></div>
+                    </div>
+                    <div class="app-preview-list">
+                        <div class="app-preview-row"><span>Transações</span><strong class="valor-saida">Saídas</strong></div>
+                        <div class="app-preview-row"><span>Receitas</span><strong class="valor-entrada">Entradas</strong></div>
+                        <div class="app-preview-row"><span>Metas</span><strong>Progresso</strong></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="landing-section">
+        <p class="section-eyebrow">Insights</p>
+        <h2 class="section-title">Menos ruído. Mais decisão.</h2>
+        <p class="section-copy">A experiência destaca o que importa: tendência, maior categoria, comparação com o mês anterior e alertas práticos.</p>
+
+        <div class="insights-premium-grid">
+            <article class="insight-premium-card featured">
+                <span class="badge badge-entrada">Boa evolução</span>
+                <h3>Você reduziu seus gastos em categorias variáveis.</h3>
+                <p>O GranaSimples transforma dados financeiros simples em leitura rápida para você agir antes do orçamento apertar.</p>
+            </article>
+            <article class="insight-premium-card">
+                <span class="badge badge-neutro">Previsão</span>
+                <h3>Saldo projetado com base no seu ritmo.</h3>
+                <p>Uma camada visual ajuda a entender para onde o mês está caminhando.</p>
+            </article>
+        </div>
+    </section>
+
+    <section id="faq" class="landing-section">
+        <p class="section-eyebrow">FAQ</p>
+        <h2 class="section-title">Perguntas frequentes</h2>
+
+        <div class="faq-grid">
+            <details class="faq-item">
+                <summary>O GranaSimples é para controle pessoal?</summary>
+                <p>Sim. Ele foi pensado para organizar finanças pessoais com simplicidade, categorias, metas e relatórios visuais.</p>
+            </details>
+            <details class="faq-item">
+                <summary>Funciona em tema claro e escuro?</summary>
+                <p>Sim. A interface mantém contraste, legibilidade e personalidade nos dois temas.</p>
+            </details>
+            <details class="faq-item">
+                <summary>Preciso usar planilha junto?</summary>
+                <p>Não. A proposta é centralizar entradas, saídas, categorias, metas e gastos fixos em um painel direto.</p>
+            </details>
+            <details class="faq-item">
+                <summary>O visual é baseado em template?</summary>
+                <p>Não. A evolução combina referências visuais, mas preserva a identidade financeira própria do GranaSimples.</p>
+            </details>
+        </div>
+    </section>
+
+    <section class="landing-section">
+        <div class="final-cta">
+            <h2>Seu dinheiro mais claro a partir de hoje.</h2>
+            <p class="section-copy">Comece simples, acompanhe melhor e tome decisões com mais confiança.</p>
+            <div class="hero-actions center-actions">
+                <a href="{{ url_for('auth.register') }}" class="btn">Começar agora</a>
+                <a href="{{ url_for('auth.login') }}" class="btn btn-secundario">Entrar</a>
+            </div>
+        </div>
+    </section>
+
+    <footer class="landing-footer">
+        <div>
+            <a href="/" class="brand-lockup">
+                <span class="brand-mark">G</span>
+                <span>GranaSimples</span>
+            </a>
+            <p style="margin-top:12px;">Controle financeiro pessoal com visual claro, metas e insights práticos.</p>
+        </div>
+        <div>
+            <h4>Produto</h4>
+            <ul>
+                <li><a href="#funcionalidades">Funcionalidades</a></li>
+                <li><a href="#dashboard">Dashboard</a></li>
+                <li><a href="#metas">Metas</a></li>
+            </ul>
+        </div>
+        <div>
+            <h4>Conta</h4>
+            <ul>
+                <li><a href="{{ url_for('auth.login') }}">Entrar</a></li>
+                <li><a href="{{ url_for('auth.register') }}">Criar conta</a></li>
+            </ul>
+        </div>
+        <div>
+            <h4>GranaSimples</h4>
+            <ul>
+                <li>© 2026</li>
+                <li>Feito para finanças sem complicação</li>
+            </ul>
+        </div>
+    </footer>
 </div>
 
 </body>

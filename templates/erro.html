@@ -5,9 +5,20 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ codigo }} - Grana Simples</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script src="{{ url_for('static', filename='js/theme.js') }}"></script>
 </head>
 <body class="login-page">
     <div class="login-container">
+        <div class="auth-card-header">
+            <a href="/" class="brand-lockup">
+                <span class="brand-mark">G</span>
+                <span>GranaSimples</span>
+            </a>
+            <button class="theme-toggle" type="button" data-theme-toggle aria-label="Alternar tema">
+                <span class="theme-icon-moon">☾</span>
+                <span class="theme-icon-sun">☀</span>
+            </button>
+        </div>
         <h1>{{ codigo }}</h1>
         <p><strong>{{ titulo }}</strong></p>
         <p>{{ mensagem }}</p>

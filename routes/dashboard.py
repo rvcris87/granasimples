@@ -1,5 +1,6 @@
 import os
 import logging
+from datetime import date
 from flask import Blueprint, render_template, request, session, abort
 from psycopg2 import OperationalError
 from decorators import login_required
@@ -97,6 +98,10 @@ def app_dashboard():
         tendencia_entradas=tendencia.get("entradas", []),
         tendencia_saidas=tendencia.get("saidas", []),
         tendencia_saldo=tendencia.get("saldo", []),
+        evolucao_labels=tendencia.get("labels", []),
+        evolucao_entradas=tendencia.get("entradas", []),
+        evolucao_saidas=tendencia.get("saidas", []),
+        evolucao_saldo=tendencia.get("saldo", []),
         previsao_valor=float(previsao.get("valor", 0) or 0),
         previsao_mensagem=previsao.get("mensagem", ""),
         alertas_metas=alertas_metas,
@@ -107,7 +112,8 @@ def app_dashboard():
         alertas_gastos_fixos=insights_gastos_fixos.get("alertas_gastos_fixos", []),
         lancamentos_pendentes=lancamentos_pendentes,
         inteligencia=inteligencia,
-        mes=mes
+        mes=mes,
+        data_hoje=date.today().isoformat()
     )
 
 

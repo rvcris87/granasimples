@@ -51,12 +51,15 @@ def add_gasto_fixo():
 
         if categoria_id:
             cur.execute("""
-                SELECT id
+                SELECT id, tipo
                 FROM categorias
                 WHERE id = %s AND usuario_id = %s
             """, (categoria_id, usuario_id))
-            if not cur.fetchone():
+            categoria = cur.fetchone()
+            if not categoria:
                 return redirecionar_dashboard("Categoria não encontrada.", "erro")
+            if categoria["tipo"] != "saida":
+                return redirecionar_dashboard("Gastos fixos devem usar uma categoria de saída.", "erro")
 
         cur.execute("""
             INSERT INTO gastos_fixos (usuario_id, descricao, valor, categoria_id, dia_vencimento, ativo)

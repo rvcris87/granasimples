@@ -5,10 +5,21 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Criar conta - Grana Simples</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script src="{{ url_for('static', filename='js/theme.js') }}"></script>
 </head>
 <body class="login-page">
 
 <div class="login-container">
+    <div class="auth-card-header">
+        <a href="/" class="brand-lockup">
+            <span class="brand-mark">G</span>
+            <span>GranaSimples</span>
+        </a>
+        <button class="theme-toggle" type="button" data-theme-toggle aria-label="Alternar tema">
+            <span class="theme-icon-moon">☾</span>
+            <span class="theme-icon-sun">☀</span>
+        </button>
+    </div>
 
     <h1>Criar conta</h1>
     <p>Comece a organizar sua vida financeira</p>
@@ -57,16 +68,7 @@
 
 </div>
 
-<script>
-    document.querySelectorAll(".password-toggle").forEach((botao) => {
-        botao.addEventListener("click", () => {
-            const campo = botao.parentElement.querySelector("input");
-            const mostrar = campo.type === "password";
-            campo.type = mostrar ? "text" : "password";
-            botao.textContent = mostrar ? "Ocultar" : "Mostrar";
-        });
-    });
-</script>
+<script src="{{ url_for('static', filename='js/auth.js') }}" defer></script>
 
 </body>
 </html>
