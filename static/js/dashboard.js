@@ -4,6 +4,8 @@ document.addEventListener("DOMContentLoaded", () => {
         currency: "BRL"
     });
     const chartInstances = [];
+    const secoesValidas = Array.from(document.querySelectorAll("[data-section]"))
+        .map((secao) => secao.dataset.section);
 
     function cssVar(nome, fallback) {
         return getComputedStyle(document.documentElement).getPropertyValue(nome).trim() || fallback;
@@ -52,6 +54,44 @@ document.addEventListener("DOMContentLoaded", () => {
     function registrarGrafico(canvas) {
         const chart = Chart.getChart(canvas);
         if (chart) chartInstances.push(chart);
+    }
+
+    function ativarSecao(idSecao) {
+        const idSeguro = secoesValidas.includes(idSecao) ? idSecao : "visao-geral";
+
+        document.querySelectorAll("[data-section]").forEach((secao) => {
+            secao.classList.toggle("is-active", secao.dataset.section === idSeguro);
+        });
+
+        document.querySelectorAll("[data-section-link]").forEach((link) => {
+            const ativo = link.dataset.sectionLink === idSeguro;
+            link.classList.toggle("ativo", ativo);
+            if (ativo) {
+                link.setAttribute("aria-current", "page");
+            } else {
+                link.removeAttribute("aria-current");
+            }
+        });
+
+        window.setTimeout(() => {
+            chartInstances.forEach((chart) => chart.resize());
+            window.dispatchEvent(new Event("resize"));
+        }, 80);
+    }
+
+    function inicializarNavegacaoInterna() {
+        const hashInicial = window.location.hash.replace("#", "");
+        ativarSecao(hashInicial || "visao-geral");
+
+        document.querySelectorAll("[data-section-link]").forEach((link) => {
+            link.addEventListener("click", () => {
+                ativarSecao(link.dataset.sectionLink);
+            });
+        });
+
+        window.addEventListener("hashchange", () => {
+            ativarSecao(window.location.hash.replace("#", ""));
+        });
     }
 
     function inicializarGraficoResumo() {
@@ -322,6 +362,36 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
+    function inicializarFiltrosDeTransacoes() {
+        const busca = document.querySelector("[data-transaction-search]");
+        const tipo = document.querySelector("[data-transaction-type]");
+        const linhas = Array.from(document.querySelectorAll("[data-transaction-row]"));
+        const vazio = document.querySelector("[data-transaction-empty]");
+
+        if (!linhas.length) return;
+
+        const filtrar = () => {
+            const termo = (busca?.value || "").trim().toLowerCase();
+            const tipoSelecionado = tipo?.value || "";
+            let visiveis = 0;
+
+            linhas.forEach((linha) => {
+                const combinaBusca = !termo || (linha.dataset.search || "").includes(termo);
+                const combinaTipo = !tipoSelecionado || linha.dataset.type === tipoSelecionado;
+                const visivel = combinaBusca && combinaTipo;
+
+                linha.hidden = !visivel;
+                if (visivel) visiveis += 1;
+            });
+
+            if (vazio) vazio.classList.toggle("is-hidden", visiveis > 0);
+        };
+
+        busca?.addEventListener("input", filtrar);
+        tipo?.addEventListener("change", filtrar);
+        filtrar();
+    }
+
     function inicializarAnimacoes() {
         document.querySelectorAll(".progresso-meta").forEach((barra) => {
             const progresso = parseFloat(barra.dataset.progresso || barra.style.width || 0);
@@ -350,9 +420,11 @@ document.addEventListener("DOMContentLoaded", () => {
         inicializarGraficoTendencia();
     }
 
+    inicializarNavegacaoInterna();
     inicializarGraficoResumo();
     inicializarGraficoTendencia();
     inicializarFiltrosDeCategoria();
+    inicializarFiltrosDeTransacoes();
     inicializarAnimacoes();
     inicializarToasts();
 

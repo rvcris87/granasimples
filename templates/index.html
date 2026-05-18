@@ -15,15 +15,19 @@
 <div class="app-shell">
     <aside class="sidebar" aria-label="Navegação principal">
         <div class="sidebar-top">
-            <a href="{{ url_for('dashboard.app_dashboard') }}" class="brand-mini" aria-label="GranaSimples">G</a>
+            <a href="{{ url_for('dashboard.app_dashboard') }}#visao-geral" class="brand-lockup app-brand" aria-label="GranaSimples">
+                <span class="brand-mini">G</span>
+                <span>GranaSimples</span>
+            </a>
 
-            <nav class="sidebar-nav">
-                <a href="{{ url_for('dashboard.app_dashboard') }}" class="nav-icon ativo" aria-label="Início" title="Início"><i class="fa-solid fa-house"></i></a>
-                <a href="#nova-transacao" class="nav-icon" aria-label="Transações" title="Transações"><i class="fa-solid fa-arrow-right-arrow-left"></i></a>
-                <a href="#nova-categoria" class="nav-icon" aria-label="Categorias" title="Categorias"><i class="fa-solid fa-tags"></i></a>
-                <a href="#graficos" class="nav-icon" aria-label="Relatórios" title="Relatórios"><i class="fa-solid fa-chart-line"></i></a>
-                <a href="#metas" class="nav-icon" aria-label="Metas" title="Metas"><i class="fa-solid fa-bullseye"></i></a>
-                <a href="#gastos-fixos" class="nav-icon" aria-label="Gastos fixos" title="Gastos fixos"><i class="fa-solid fa-rotate"></i></a>
+            <nav class="sidebar-nav" data-app-nav>
+                <a href="#visao-geral" class="nav-icon ativo" data-section-link="visao-geral"><i class="fa-solid fa-house"></i><span>Visão geral</span></a>
+                <a href="#transacoes" class="nav-icon" data-section-link="transacoes"><i class="fa-solid fa-arrow-right-arrow-left"></i><span>Transações</span></a>
+                <a href="#categorias" class="nav-icon" data-section-link="categorias"><i class="fa-solid fa-tags"></i><span>Categorias</span></a>
+                <a href="#metas" class="nav-icon" data-section-link="metas"><i class="fa-solid fa-bullseye"></i><span>Metas</span></a>
+                <a href="#gastos-fixos" class="nav-icon" data-section-link="gastos-fixos"><i class="fa-solid fa-rotate"></i><span>Gastos fixos</span></a>
+                <a href="#relatorios" class="nav-icon" data-section-link="relatorios"><i class="fa-solid fa-chart-line"></i><span>Relatórios</span></a>
+                <a href="#configuracoes" class="nav-icon" data-section-link="configuracoes"><i class="fa-solid fa-sliders"></i><span>Configurações</span></a>
             </nav>
         </div>
 
@@ -31,11 +35,13 @@
             <button class="nav-icon" type="button" data-theme-toggle aria-label="Alternar tema" title="Alternar tema">
                 <i class="fa-solid fa-moon theme-icon-moon"></i>
                 <i class="fa-solid fa-sun theme-icon-sun"></i>
+                <span>Tema</span>
             </button>
             <form method="POST" action="{{ url_for('auth.logout') }}" class="logout-form">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <button type="submit" class="nav-icon" aria-label="Sair" title="Sair">
                     <i class="fa-solid fa-right-from-bracket"></i>
+                    <span>Sair</span>
                 </button>
             </form>
         </div>
@@ -64,7 +70,7 @@
                 <div>
                     <p class="section-eyebrow">Painel financeiro</p>
                     <h1>Olá, {{ nome }}</h1>
-                    <p>Resumo visual das suas finanças, metas e gastos recorrentes.</p>
+                    <p>Seu dinheiro organizado em áreas claras para decidir melhor, sem perder a leveza do GranaSimples.</p>
                 </div>
 
                 <div class="topbar-actions">
@@ -75,102 +81,128 @@
                 </div>
             </header>
 
-            <section class="resumo-cards" aria-label="Resumo financeiro">
-                <article class="finance-card entrada-card">
-                    <span>Entradas</span>
-                    <strong>R$ {{ "%.2f"|format(total_entradas or 0) }}</strong>
-                    <small>Receitas registradas no período</small>
-                </article>
-
-                <article class="finance-card saida-card">
-                    <span>Saídas</span>
-                    <strong>R$ {{ "%.2f"|format(total_saidas or 0) }}</strong>
-                    <small>Despesas e reservas lançadas</small>
-                </article>
-
-                <article class="finance-card saldo-card">
-                    <span>Saldo</span>
-                    <strong>R$ {{ "%.2f"|format(saldo or 0) }}</strong>
-                    <small>Diferença entre entradas e saídas</small>
-                </article>
-
-                <article class="finance-card meta-card">
-                    <span>Gastos fixos</span>
-                    <strong>R$ {{ "%.2f"|format(total_gastos_fixos or 0) }}</strong>
-                    <small>{{ "%.1f"|format(percentual_gastos_fixos or 0) }}% das saídas do mês</small>
-                </article>
-            </section>
-
-            <section class="inteligencia-section">
-                <div class="inteligencia-header">
+            <section class="app-section is-active" id="visao-geral" data-section="visao-geral" aria-labelledby="titulo-visao-geral">
+                <div class="section-heading">
                     <div>
-                        <h2>Inteligência financeira</h2>
-                        <p>Leitura rápida para entender comportamento, alertas e oportunidades.</p>
+                        <p class="section-eyebrow">Visão geral</p>
+                        <h2 id="titulo-visao-geral">Resumo do mês</h2>
                     </div>
-                    <span class="inteligencia-badge"><i class="fa-solid fa-wand-magic-sparkles"></i></span>
+                    <a href="#transacoes" class="btn btn-secundario" data-section-link="transacoes"><i class="fa-solid fa-plus"></i> Nova transação</a>
                 </div>
 
-                <div class="inteligencia-grid">
-                    <article class="inteligencia-card">
-                        <span>Gasto atual</span>
-                        <strong>R$ {{ "%.2f"|format(inteligencia.total_gastos_mes_atual or 0) }}</strong>
-                        <p>Você gastou esse valor no mês selecionado.</p>
+                <section class="resumo-cards" aria-label="Resumo financeiro">
+                    <article class="finance-card entrada-card">
+                        <span>Entradas</span>
+                        <strong>R$ {{ "%.2f"|format(total_entradas or 0) }}</strong>
+                        <small>Receitas registradas no período</small>
                     </article>
+                    <article class="finance-card saida-card">
+                        <span>Saídas</span>
+                        <strong>R$ {{ "%.2f"|format(total_saidas or 0) }}</strong>
+                        <small>Despesas e reservas lançadas</small>
+                    </article>
+                    <article class="finance-card saldo-card">
+                        <span>Saldo</span>
+                        <strong>R$ {{ "%.2f"|format(saldo or 0) }}</strong>
+                        <small>Diferença entre entradas e saídas</small>
+                    </article>
+                    <article class="finance-card meta-card">
+                        <span>Gastos fixos</span>
+                        <strong>R$ {{ "%.2f"|format(total_gastos_fixos or 0) }}</strong>
+                        <small>{{ "%.1f"|format(percentual_gastos_fixos or 0) }}% das saídas do mês</small>
+                    </article>
+                </section>
 
-                    <article class="inteligencia-card">
-                        <span>Mês anterior</span>
-                        <strong>R$ {{ "%.2f"|format(inteligencia.total_gastos_mes_anterior or 0) }}</strong>
-                        <p>Base de comparação para medir evolução.</p>
-                    </article>
+                <div class="overview-layout">
+                    <section class="painel-card">
+                        <div class="painel-card-header">
+                            <div>
+                                <h2>Fluxo principal</h2>
+                                <p>Entradas e saídas no período selecionado.</p>
+                            </div>
+                            <span class="card-icon"><i class="fa-solid fa-chart-pie"></i></span>
+                        </div>
+                        <div class="grafico-box">
+                            <h3>Entradas x Saídas</h3>
+                            <canvas id="graficoResumo"></canvas>
+                        </div>
+                    </section>
 
-                    <article class="inteligencia-card">
-                        <span>Variação</span>
-                        <strong>{% if inteligencia.diferenca_percentual > 0 %}+{% endif %}{{ "%.1f"|format(inteligencia.diferenca_percentual or 0) }}%</strong>
-                        <p>
-                            {% if inteligencia.total_gastos_mes_anterior > 0 %}
-                                {% if inteligencia.diferenca_percentual > 0 %}
-                                    Gastos acima do mês anterior.
-                                {% elif inteligencia.diferenca_percentual < 0 %}
-                                    Gastos menores que no mês anterior.
-                                {% else %}
-                                    Gastos estáveis no período.
-                                {% endif %}
-                            {% else %}
-                                Sem histórico suficiente para comparar.
-                            {% endif %}
-                        </p>
-                    </article>
-
-                    <article class="inteligencia-card">
-                        <span>Maior categoria</span>
-                        <strong>{{ inteligencia.maior_categoria or "Sem dados" }}</strong>
-                        <p>
-                            {% if inteligencia.maior_categoria %}
-                                R$ {{ "%.2f"|format(inteligencia.valor_maior_categoria or 0) }} concentrados aqui.
-                            {% else %}
-                                Registre saídas para revelar esse dado.
-                            {% endif %}
-                        </p>
-                    </article>
-
-                    <article class="inteligencia-card alerta-{{ inteligencia.status_comparacao or 'neutro' }}">
-                        <span>Status</span>
-                        <strong>
-                            {% if inteligencia.status_comparacao == "positivo" %}
-                                Boa evolução
-                            {% elif inteligencia.status_comparacao == "negativo" %}
-                                Atenção aos gastos
-                            {% else %}
-                                Acompanhamento
-                            {% endif %}
-                        </strong>
-                        <p>{{ inteligencia.alerta_gastos }}</p>
-                    </article>
+                    <section class="painel-card">
+                        <div class="painel-card-header">
+                            <div>
+                                <h2>Últimas transações</h2>
+                                <p>Atalhos do que acabou de acontecer.</p>
+                            </div>
+                        </div>
+                        {% if transacoes %}
+                        <div class="compact-list">
+                            {% for t in transacoes[:5] %}
+                            <div class="compact-row">
+                                <div>
+                                    <strong>{{ t.descricao or "Sem descrição" }}</strong>
+                                    <small>{{ t.categoria_nome or "Sem categoria" }} · {% if t.data %}{{ t.data.strftime('%d/%m/%Y') }}{% else %}Data desconhecida{% endif %}</small>
+                                </div>
+                                <span class="{% if t.tipo == 'entrada' %}entrada{% else %}saida{% endif %}">
+                                    {% if t.tipo == "entrada" %}+{% else %}-{% endif %} R$ {{ "%.2f"|format(t.valor or 0) }}
+                                </span>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {% else %}
+                        <p class="vazio">Nenhuma transação cadastrada ainda.</p>
+                        {% endif %}
+                    </section>
                 </div>
+
+                <section class="inteligencia-section">
+                    <div class="inteligencia-header">
+                        <div>
+                            <h2>Alertas e inteligência financeira</h2>
+                            <p>Leitura rápida para entender comportamento, riscos e oportunidades.</p>
+                        </div>
+                        <span class="inteligencia-badge"><i class="fa-solid fa-wand-magic-sparkles"></i></span>
+                    </div>
+
+                    <div class="inteligencia-grid">
+                        <article class="inteligencia-card">
+                            <span>Gasto atual</span>
+                            <strong>R$ {{ "%.2f"|format(inteligencia.total_gastos_mes_atual or 0) }}</strong>
+                            <p>Você gastou esse valor no mês selecionado.</p>
+                        </article>
+                        <article class="inteligencia-card">
+                            <span>Mês anterior</span>
+                            <strong>R$ {{ "%.2f"|format(inteligencia.total_gastos_mes_anterior or 0) }}</strong>
+                            <p>Base de comparação para medir evolução.</p>
+                        </article>
+                        <article class="inteligencia-card">
+                            <span>Variação</span>
+                            <strong>{% if inteligencia.diferenca_percentual > 0 %}+{% endif %}{{ "%.1f"|format(inteligencia.diferenca_percentual or 0) }}%</strong>
+                            <p>{% if inteligencia.total_gastos_mes_anterior > 0 %}{% if inteligencia.diferenca_percentual > 0 %}Gastos acima do mês anterior.{% elif inteligencia.diferenca_percentual < 0 %}Gastos menores que no mês anterior.{% else %}Gastos estáveis no período.{% endif %}{% else %}Sem histórico suficiente para comparar.{% endif %}</p>
+                        </article>
+                        <article class="inteligencia-card">
+                            <span>Maior categoria</span>
+                            <strong>{{ inteligencia.maior_categoria or "Sem dados" }}</strong>
+                            <p>{% if inteligencia.maior_categoria %}R$ {{ "%.2f"|format(inteligencia.valor_maior_categoria or 0) }} concentrados aqui.{% else %}Registre saídas para revelar esse dado.{% endif %}</p>
+                        </article>
+                        <article class="inteligencia-card alerta-{{ inteligencia.status_comparacao or 'neutro' }}">
+                            <span>Status</span>
+                            <strong>{% if inteligencia.status_comparacao == "positivo" %}Boa evolução{% elif inteligencia.status_comparacao == "negativo" %}Atenção aos gastos{% else %}Acompanhamento{% endif %}</strong>
+                            <p>{{ inteligencia.alerta_gastos }}</p>
+                        </article>
+                    </div>
+                </section>
             </section>
 
-            <section class="dashboard-grid">
-                <div class="coluna-principal">
+            <section class="app-section" id="transacoes" data-section="transacoes" aria-labelledby="titulo-transacoes">
+                <div class="section-heading">
+                    <div>
+                        <p class="section-eyebrow">Transações</p>
+                        <h2 id="titulo-transacoes">Lançamentos e histórico</h2>
+                    </div>
+                </div>
+
+                <div class="split-layout">
                     <section class="painel-card" id="nova-transacao">
                         <div class="painel-card-header">
                             <div>
@@ -179,7 +211,6 @@
                             </div>
                             <span class="card-icon"><i class="fa-solid fa-plus"></i></span>
                         </div>
-
                         <form method="POST" action="{{ url_for('transacoes.add_transacao') }}" class="form-stack">
                             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                             <div class="form-row">
@@ -192,7 +223,6 @@
                                     <option value="entrada">Entrada</option>
                                     <option value="saida">Saída</option>
                                 </select>
-
                                 <select name="categoria_id" id="categoria_id">
                                     <option value="">Categoria</option>
                                     {% for c in categorias %}
@@ -207,430 +237,441 @@
                         </form>
                     </section>
 
-                    <section class="painel-card" id="graficos">
-                        <div class="painel-card-header">
-                            <div>
-                                <h2>Relatórios visuais</h2>
-                                <p>Fluxo financeiro e concentração de gastos por categoria.</p>
-                            </div>
-                            <span class="card-icon"><i class="fa-solid fa-chart-simple"></i></span>
-                        </div>
-
-                        <div class="graficos-grid-interno">
-                            <div class="grafico-box">
-                                <h3>Entradas x Saídas</h3>
-                                <canvas id="graficoResumo"></canvas>
-                            </div>
-                            <div class="grafico-box">
-                                <h3>Gastos por categoria</h3>
-                                <canvas id="graficoCategorias"></canvas>
-                            </div>
-                        </div>
-                    </section>
-
-                    <div
-                        id="dados-graficos"
-                        data-entradas="{{ total_entradas }}"
-                        data-saidas="{{ total_saidas }}"
-                        data-categorias-labels='{{ categorias_labels | tojson | safe }}'
-                        data-categorias-valores='{{ categorias_valores | tojson | safe }}'>
-                    </div>
-
                     <section class="painel-card">
                         <div class="painel-card-header">
                             <div>
-                                <h2>Evolução mensal</h2>
-                                <p>Comparação de entradas, saídas e saldo nos últimos 6 meses.</p>
+                                <h2>Filtros rápidos</h2>
+                                <p>Refine a lista sem recarregar a página.</p>
                             </div>
-                            <span class="card-icon"><i class="fa-solid fa-wave-square"></i></span>
                         </div>
-                        <div class="grafico-box">
-                            <h3>Últimos 6 meses</h3>
-                            <canvas id="graficoTendencia"></canvas>
-                        </div>
-                    </section>
-
-                    <div
-                        id="dados-tendencia"
-                        data-labels='{{ tendencia_labels | tojson | safe }}'
-                        data-entradas='{{ tendencia_entradas | tojson | safe }}'
-                        data-saidas='{{ tendencia_saidas | tojson | safe }}'
-                        data-saldo='{{ tendencia_saldo | tojson | safe }}'
-                        data-evolucao-labels='{{ evolucao_labels | tojson | safe }}'
-                        data-evolucao-entradas='{{ evolucao_entradas | tojson | safe }}'
-                        data-evolucao-saidas='{{ evolucao_saidas | tojson | safe }}'
-                        data-evolucao-saldo='{{ evolucao_saldo | tojson | safe }}'>
-                    </div>
-
-                    <section class="painel-card">
-                        <div class="painel-card-header">
-                            <div>
-                                <h2>Análise inteligente</h2>
-                                <p>Alertas e leituras para tomar decisões melhores durante o mês.</p>
-                            </div>
-                            <span class="card-icon"><i class="fa-solid fa-lightbulb"></i></span>
-                        </div>
-
-                        <div class="insights-container">
-                            {% if mes and mensagem_comparacao %}
-                            <div class="insight-item insight-comparacao">{{ mensagem_comparacao }}</div>
-                            {% endif %}
-
-                            {% if maior_categoria %}
-                            <div class="insight-item insight-categoria">
-                                Maior gasto: <strong>{{ maior_categoria }}</strong> (R$ {{ "%.2f"|format(maior_valor) }})
-                            </div>
-                            {% endif %}
-
-                            {% if previsao_mensagem %}
-                            <div class="insight-item insight-previsao">{{ previsao_mensagem }}</div>
-                            {% endif %}
-
-                            {% if alertas %}
-                            <div class="alertas-box">
-                                {% for alerta in alertas %}
-                                <div class="insight-item insight-alerta">{{ alerta }}</div>
-                                {% endfor %}
-                            </div>
-                            {% endif %}
-
-                            {% if alertas_metas %}
-                            <div class="alertas-metas">
-                                {% for alerta_meta in alertas_metas %}
-                                <div class="insight-item {% if alerta_meta.tipo == 'erro' %}insight-alerta{% else %}insight-aviso{% endif %}">
-                                    {{ alerta_meta.mensagem }}
-                                </div>
-                                {% endfor %}
-                            </div>
-                            {% endif %}
-
-                            {% if insights %}
-                            <div class="insights-classicos">
-                                {% for insight in insights %}
-                                <p>{{ insight }}</p>
-                                {% endfor %}
-                            </div>
-                            {% endif %}
-
-                            {% if not mensagem_comparacao and not maior_categoria and not previsao_mensagem and not alertas and not alertas_metas and not insights %}
-                            <p class="vazio">Registre transações para gerar insights financeiros.</p>
-                            {% endif %}
-                        </div>
-                    </section>
-
-                    <section class="painel-card" id="nova-categoria">
-                        <div class="painel-card-header">
-                            <div>
-                                <h2>Categorias</h2>
-                                <p>Separe entradas e saídas para deixar os relatórios mais precisos.</p>
-                            </div>
-                            <span class="card-icon"><i class="fa-solid fa-tags"></i></span>
-                        </div>
-
-                        <form method="POST" action="{{ url_for('categorias.add_categoria') }}" class="form-row">
-                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                            <input type="text" name="nome" placeholder="Nome da categoria" minlength="2" required>
-                            <select name="tipo" required>
-                                <option value="">Tipo</option>
-                                <option value="entrada">Entrada</option>
-                                <option value="saida">Saída</option>
+                        <div class="transaction-filters">
+                            <input type="search" data-transaction-search placeholder="Buscar por descrição ou categoria" aria-label="Buscar transações">
+                            <select data-transaction-type aria-label="Filtrar por tipo">
+                                <option value="">Todos os tipos</option>
+                                <option value="entrada">Entradas</option>
+                                <option value="saida">Saídas</option>
                             </select>
-                            <button class="btn" type="submit">Nova categoria</button>
-                        </form>
-
-                        {% if categorias %}
-                        <div class="lista-categorias">
-                            {% for c in categorias %}
-                            <details class="categoria-item">
-                                <summary>
-                                    <span>{{ c.nome }}</span>
-                                    <small class="badge {% if c.tipo == 'entrada' %}badge-entrada{% else %}badge-saida{% endif %}">
-                                        {{ "Entrada" if c.tipo == "entrada" else "Saída" }}
-                                    </small>
-                                </summary>
-
-                                <form method="POST" action="{{ url_for('categorias.editar_categoria', categoria_id=c.id) }}">
-                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                    <input type="text" name="nome" value="{{ c.nome }}" minlength="2" required>
-                                    <select name="tipo" required>
-                                        <option value="entrada" {% if c.tipo == "entrada" %}selected{% endif %}>Entrada</option>
-                                        <option value="saida" {% if c.tipo == "saida" %}selected{% endif %}>Saída</option>
-                                    </select>
-                                    <button class="btn" type="submit">Salvar alterações</button>
-                                </form>
-
-                                <form method="POST" action="{{ url_for('categorias.excluir_categoria', categoria_id=c.id) }}" class="form-excluir-categoria">
-                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                    <button type="submit" class="btn-link-perigo" onclick="return confirm('Excluir esta categoria? Só será possível se ela não estiver em uso.')">Excluir categoria</button>
-                                </form>
-                            </details>
-                            {% endfor %}
                         </div>
-                        {% else %}
-                        <p class="vazio">Nenhuma categoria criada ainda.</p>
-                        {% endif %}
                     </section>
                 </div>
 
-                <div class="coluna-lateral">
+                <section class="painel-card">
+                    <div class="painel-card-header">
+                        <div>
+                            <h2>Lista de transações</h2>
+                            <p>Edição e exclusão continuam conectadas ao backend atual.</p>
+                        </div>
+                    </div>
+                    {% if transacoes %}
+                    <div class="transacoes-table-wrap">
+                        <table class="transacoes-table">
+                            <thead>
+                                <tr>
+                                    <th>Descrição</th>
+                                    <th>Tipo</th>
+                                    <th>Valor</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                            {% for t in transacoes %}
+                                <tr data-transaction-row data-type="{{ t.tipo }}" data-search="{{ (t.descricao or '')|lower }} {{ (t.categoria_nome or '')|lower }}">
+                                    <td>
+                                        <div class="transacao-descricao">{{ t.descricao or "Sem descrição" }}</div>
+                                        <div class="transacao-meta">{{ t.categoria_nome or "Sem categoria" }} · {% if t.data %}{{ t.data.strftime('%d/%m/%Y') }}{% else %}Data desconhecida{% endif %}</div>
+                                    </td>
+                                    <td><span class="badge {% if t.tipo == 'entrada' %}badge-entrada{% else %}badge-saida{% endif %}">{{ "Entrada" if t.tipo == "entrada" else "Saída" }}</span></td>
+                                    <td><strong class="{% if t.tipo == 'entrada' %}entrada{% else %}saida{% endif %}">{% if t.tipo == "entrada" %}+{% else %}-{% endif %} R$ {{ "%.2f"|format(t.valor or 0) }}</strong></td>
+                                    <td>
+                                        <div class="table-actions">
+                                            <details class="editar-transacao">
+                                                <summary>Editar</summary>
+                                                <form method="POST" action="{{ url_for('transacoes.editar_transacao', transacao_id=t.id) }}">
+                                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                                    <input type="text" name="descricao" value="{{ t.descricao or '' }}" placeholder="Descrição" required>
+                                                    <input type="number" step="0.01" min="0.01" name="valor" value="{{ t.valor or 0 }}" placeholder="Valor" required>
+                                                    <select name="tipo" required>
+                                                        <option value="entrada" {% if t.tipo == "entrada" %}selected{% endif %}>Entrada</option>
+                                                        <option value="saida" {% if t.tipo == "saida" %}selected{% endif %}>Saída</option>
+                                                    </select>
+                                                    <select name="categoria_id">
+                                                        <option value="">Categoria</option>
+                                                        {% for c in categorias %}
+                                                        <option value="{{ c.id }}" data-tipo="{{ c.tipo }}" {% if t.categoria_id == c.id %}selected{% endif %}>{{ c.nome }}</option>
+                                                        {% endfor %}
+                                                    </select>
+                                                    <input type="date" name="data" value="{{ t.data.strftime('%Y-%m-%d') if t.data else '' }}" required>
+                                                    <button type="submit" class="btn">Salvar</button>
+                                                </form>
+                                            </details>
+                                            <form method="POST" action="{{ url_for('transacoes.excluir_transacao', transacao_id=t.id) }}" class="form-excluir-transacao">
+                                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                                <button type="submit" class="btn-link-perigo" onclick="return confirm('Excluir esta transação?')">Excluir</button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    <p class="vazio is-hidden" data-transaction-empty>Nenhuma transação encontrada para esses filtros.</p>
+                    {% else %}
+                    <p class="vazio">Nenhuma transação cadastrada ainda.</p>
+                    {% endif %}
+                </section>
+            </section>
+
+            <section class="app-section" id="categorias" data-section="categorias" aria-labelledby="titulo-categorias">
+                <div class="section-heading">
+                    <div>
+                        <p class="section-eyebrow">Categorias</p>
+                        <h2 id="titulo-categorias">Entrada e saída bem separadas</h2>
+                    </div>
+                </div>
+                <section class="painel-card">
+                    <div class="painel-card-header">
+                        <div>
+                            <h2>Cadastro de categorias</h2>
+                            <p>Organize os relatórios e filtros com nomes consistentes.</p>
+                        </div>
+                        <span class="card-icon"><i class="fa-solid fa-tags"></i></span>
+                    </div>
+                    <form method="POST" action="{{ url_for('categorias.add_categoria') }}" class="form-row">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <input type="text" name="nome" placeholder="Nome da categoria" minlength="2" required>
+                        <select name="tipo" required>
+                            <option value="">Tipo</option>
+                            <option value="entrada">Entrada</option>
+                            <option value="saida">Saída</option>
+                        </select>
+                        <button class="btn" type="submit">Nova categoria</button>
+                    </form>
+                    {% if categorias %}
+                    <div class="category-columns">
+                        <div>
+                            <h3>Entradas</h3>
+                            <div class="lista-categorias">
+                                {% for c in categorias if c.tipo == "entrada" %}
+                                <details class="categoria-item">
+                                    <summary><span>{{ c.nome }}</span><small class="badge badge-entrada">Entrada</small></summary>
+                                    <form method="POST" action="{{ url_for('categorias.editar_categoria', categoria_id=c.id) }}">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                        <input type="text" name="nome" value="{{ c.nome }}" minlength="2" required>
+                                        <select name="tipo" required>
+                                            <option value="entrada" selected>Entrada</option>
+                                            <option value="saida">Saída</option>
+                                        </select>
+                                        <button class="btn" type="submit">Salvar alterações</button>
+                                    </form>
+                                    <form method="POST" action="{{ url_for('categorias.excluir_categoria', categoria_id=c.id) }}" class="form-excluir-categoria">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                        <button type="submit" class="btn-link-perigo" onclick="return confirm('Excluir esta categoria? Só será possível se ela não estiver em uso.')">Excluir categoria</button>
+                                    </form>
+                                </details>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        <div>
+                            <h3>Saídas</h3>
+                            <div class="lista-categorias">
+                                {% for c in categorias if c.tipo == "saida" %}
+                                <details class="categoria-item">
+                                    <summary><span>{{ c.nome }}</span><small class="badge badge-saida">Saída</small></summary>
+                                    <form method="POST" action="{{ url_for('categorias.editar_categoria', categoria_id=c.id) }}">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                        <input type="text" name="nome" value="{{ c.nome }}" minlength="2" required>
+                                        <select name="tipo" required>
+                                            <option value="entrada">Entrada</option>
+                                            <option value="saida" selected>Saída</option>
+                                        </select>
+                                        <button class="btn" type="submit">Salvar alterações</button>
+                                    </form>
+                                    <form method="POST" action="{{ url_for('categorias.excluir_categoria', categoria_id=c.id) }}" class="form-excluir-categoria">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                        <button type="submit" class="btn-link-perigo" onclick="return confirm('Excluir esta categoria? Só será possível se ela não estiver em uso.')">Excluir categoria</button>
+                                    </form>
+                                </details>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                    {% else %}
+                    <p class="vazio">Nenhuma categoria criada ainda.</p>
+                    {% endif %}
+                </section>
+            </section>
+
+            <section class="app-section" id="metas" data-section="metas" aria-labelledby="titulo-metas">
+                <div class="section-heading">
+                    <div>
+                        <p class="section-eyebrow">Metas</p>
+                        <h2 id="titulo-metas">Progresso e reservas</h2>
+                    </div>
+                </div>
+                <section class="painel-card">
+                    <div class="painel-card-header">
+                        <div>
+                            <h2>Minhas metas</h2>
+                            <p>Acompanhe progresso, valores guardados e próximos aportes.</p>
+                        </div>
+                    </div>
+                    <form method="POST" action="{{ url_for('metas.add_meta') }}" class="form-criar-meta">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <div class="form-grupo">
+                            <input name="titulo" placeholder="Nome da meta" required>
+                            <input name="valor_meta" type="number" step="0.01" min="0.01" placeholder="Valor alvo" required>
+                            <button class="btn" type="submit">Criar meta</button>
+                        </div>
+                    </form>
+                    {% if metas %}
+                    <div class="lista-metas">
+                        {% for m in metas %}
+                        {% set valor_atual = m.valor_atual or 0 %}
+                        {% set valor_meta = m.valor_meta or 0 %}
+                        {% set pct = (valor_atual / valor_meta * 100)|round(1) if valor_meta and valor_meta > 0 else 0 %}
+                        <article class="meta-item">
+                            <div class="meta-header">
+                                <div>
+                                    <h3>{{ m.titulo or "Meta sem nome" }}</h3>
+                                    <small>{{ "%.1f"|format(100 if pct > 100 else pct) }}% concluído</small>
+                                </div>
+                                <div class="meta-header-acoes">
+                                    <span class="meta-badge">R$ {{ "%.2f"|format(valor_atual) }} / R$ {{ "%.2f"|format(valor_meta) }}</span>
+                                    <details class="meta-menu">
+                                        <summary class="meta-menu-btn" aria-label="Opções da meta"><i class="fa-solid fa-ellipsis-vertical"></i></summary>
+                                        <div class="meta-menu-content">
+                                            <button class="meta-menu-item" type="button" onclick="document.getElementById('form-editar-{{ m.id }}').showModal()">Editar</button>
+                                            <form method="POST" action="{{ url_for('metas.delete_meta', meta_id=m.id) }}">
+                                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                                <button class="meta-menu-item meta-menu-item-delete" onclick="return confirm('Tem certeza que deseja excluir esta meta?')">Excluir</button>
+                                            </form>
+                                        </div>
+                                    </details>
+                                </div>
+                            </div>
+                            <div class="barra-meta">
+                                <div class="progresso-meta" data-progresso="{{ 100 if pct > 100 else pct }}" style="width: {{ 100 if pct > 100 else pct }}%"></div>
+                            </div>
+                            <div class="meta-acoes-linha">
+                                <form method="POST" action="{{ url_for('metas.adicionar_valor_meta', meta_id=m.id) }}" class="meta-form-inline">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                    <input name="valor_adicionar" type="number" step="0.01" min="0.01" placeholder="Adicionar" required>
+                                    <button class="btn-mini btn-adicionar" type="submit" aria-label="Adicionar valor">+</button>
+                                </form>
+                                <form method="POST" action="{{ url_for('metas.retirar_valor_meta', meta_id=m.id) }}" class="meta-form-inline">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                    <input name="valor_retirar" type="number" step="0.01" min="0.01" placeholder="Retirar" required>
+                                    <button class="btn-mini btn-retirar" type="submit" aria-label="Retirar valor">−</button>
+                                </form>
+                                <form method="POST" action="{{ url_for('metas.usar_saldo_meta', meta_id=m.id) }}" class="meta-form-inline">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                    <input name="valor_usar_saldo" type="number" step="0.01" min="0.01" placeholder="Usar saldo" required>
+                                    <button class="btn-mini btn-usar-saldo" type="submit" aria-label="Usar saldo na meta"><i class="fa-solid fa-wallet"></i></button>
+                                </form>
+                            </div>
+                            <dialog id="form-editar-{{ m.id }}" class="modal-editar">
+                                <div class="modal-content">
+                                    <h3>Editar meta</h3>
+                                    <form method="POST" action="{{ url_for('metas.editar_meta', meta_id=m.id) }}">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                        <div class="modal-form-group"><input type="text" name="titulo" value="{{ m.titulo or '' }}" placeholder="Nome da meta" required></div>
+                                        <div class="modal-form-group"><input type="number" name="valor_meta" step="0.01" min="0.01" value="{{ valor_meta }}" placeholder="Valor alvo" required></div>
+                                        <div class="modal-form-group modal-buttons">
+                                            <button type="submit" class="btn btn-salvar">Salvar</button>
+                                            <button type="button" class="btn btn-cancelar" onclick="document.getElementById('form-editar-{{ m.id }}').close()">Cancelar</button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </dialog>
+                        </article>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <p class="vazio">Nenhuma meta criada ainda.</p>
+                    {% endif %}
+                </section>
+            </section>
+
+            <section class="app-section" id="gastos-fixos" data-section="gastos-fixos" aria-labelledby="titulo-gastos-fixos">
+                <div class="section-heading">
+                    <div>
+                        <p class="section-eyebrow">Gastos fixos</p>
+                        <h2 id="titulo-gastos-fixos">Recorrências e impacto mensal</h2>
+                    </div>
+                </div>
+                <div class="split-layout">
                     <section class="painel-card">
                         <div class="painel-card-header">
                             <div>
-                                <h2>Transações recentes</h2>
-                                <p>Últimos lançamentos do período filtrado.</p>
+                                <h2>Novo gasto fixo</h2>
+                                <p>Contas recorrentes que podem virar transações do mês.</p>
                             </div>
                         </div>
-
-                        {% if transacoes %}
-                        <div class="transacoes-table-wrap">
-                            <table class="transacoes-table">
-                                <thead>
-                                    <tr>
-                                        <th>Descrição</th>
-                                        <th>Tipo</th>
-                                        <th>Valor</th>
-                                        <th>Ações</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                {% for t in transacoes %}
-                                    <tr>
-                                        <td>
-                                            <div class="transacao-descricao">{{ t.descricao or "Sem descrição" }}</div>
-                                            <div class="transacao-meta">
-                                                {{ t.categoria_nome or "Sem categoria" }} ·
-                                                {% if t.data %}{{ t.data.strftime('%d/%m/%Y') }}{% else %}Data desconhecida{% endif %}
-                                            </div>
-                                        </td>
-                                        <td>
-                                            <span class="badge {% if t.tipo == 'entrada' %}badge-entrada{% else %}badge-saida{% endif %}">
-                                                {{ "Entrada" if t.tipo == "entrada" else "Saída" }}
-                                            </span>
-                                        </td>
-                                        <td>
-                                            <strong class="{% if t.tipo == 'entrada' %}entrada{% else %}saida{% endif %}">
-                                                {% if t.tipo == "entrada" %}+{% else %}-{% endif %} R$ {{ "%.2f"|format(t.valor or 0) }}
-                                            </strong>
-                                        </td>
-                                        <td>
-                                            <div class="table-actions">
-                                                <details class="editar-transacao">
-                                                    <summary>Editar</summary>
-                                                    <form method="POST" action="{{ url_for('transacoes.editar_transacao', transacao_id=t.id) }}">
-                                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                                        <input type="text" name="descricao" value="{{ t.descricao or '' }}" placeholder="Descrição" required>
-                                                        <input type="number" step="0.01" min="0.01" name="valor" value="{{ t.valor or 0 }}" placeholder="Valor" required>
-                                                        <select name="tipo" required>
-                                                            <option value="entrada" {% if t.tipo == "entrada" %}selected{% endif %}>Entrada</option>
-                                                            <option value="saida" {% if t.tipo == "saida" %}selected{% endif %}>Saída</option>
-                                                        </select>
-                                                        <select name="categoria_id">
-                                                            <option value="">Categoria</option>
-                                                            {% for c in categorias %}
-                                                            <option value="{{ c.id }}" data-tipo="{{ c.tipo }}" {% if t.categoria_id == c.id %}selected{% endif %}>{{ c.nome }}</option>
-                                                            {% endfor %}
-                                                        </select>
-                                                        <input type="date" name="data" value="{{ t.data.strftime('%Y-%m-%d') if t.data else '' }}" required>
-                                                        <button type="submit" class="btn">Salvar</button>
-                                                    </form>
-                                                </details>
-
-                                                <form method="POST" action="{{ url_for('transacoes.excluir_transacao', transacao_id=t.id) }}" class="form-excluir-transacao">
-                                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                                    <button type="submit" class="btn-link-perigo" onclick="return confirm('Excluir esta transação?')">Excluir</button>
-                                                </form>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                {% endfor %}
-                                </tbody>
-                            </table>
-                        </div>
-                        {% else %}
-                        <p class="vazio">Nenhuma transação cadastrada ainda.</p>
-                        {% endif %}
-                    </section>
-
-                    <section class="painel-card" id="gastos-fixos">
-                        <div class="painel-card-header">
-                            <div>
-                                <h2>Gastos fixos</h2>
-                                <p>Contas recorrentes e impacto no orçamento.</p>
-                            </div>
-                        </div>
-
                         <form method="POST" action="{{ url_for('gastos_fixos.add_gasto_fixo') }}" class="form-stack">
                             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                             <input type="text" name="descricao" placeholder="Descrição do gasto" required>
                             <input type="number" step="0.01" name="valor" placeholder="Valor" required>
                             <select name="categoria_id">
                                 <option value="">Categoria (opcional)</option>
-                                {% for c in categorias %}
-                                {% if c.tipo == "saida" %}
-                                <option value="{{ c.id }}">{{ c.nome }}</option>
-                                {% endif %}
-                                {% endfor %}
+                                {% for c in categorias %}{% if c.tipo == "saida" %}<option value="{{ c.id }}">{{ c.nome }}</option>{% endif %}{% endfor %}
                             </select>
                             <input type="number" name="dia_vencimento" min="1" max="31" placeholder="Dia do vencimento" required>
                             <button class="btn" type="submit">Adicionar gasto fixo</button>
                         </form>
-
-                        {% if gastos_fixos %}
-                        <div class="gastos-fixos-lista">
-                            {% for gf in gastos_fixos %}
-                            <div class="gasto-fixo-item {% if not gf.ativo %}inativo{% endif %}">
-                                <div>
-                                    <p><strong>{{ gf.descricao or "Gasto sem descrição" }}</strong></p>
-                                    <small>{{ gf.categoria_nome or "Sem categoria" }} · Dia {{ gf.dia_vencimento or "?" }}</small>
-                                </div>
-                                <strong>R$ {{ "%.2f"|format(gf.valor or 0) }}</strong>
-                                <span class="badge {% if gf.ativo %}badge-entrada{% else %}badge-neutro{% endif %}">
-                                    {% if gf.ativo %}Ativo{% else %}Inativo{% endif %}
-                                </span>
-                                <div class="gasto-fixo-actions">
-                                    <form method="POST" action="{{ url_for('gastos_fixos.toggle_gasto_fixo', gasto_id=gf.id) }}">
-                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                        <button type="submit" class="btn-icon" title="{% if gf.ativo %}Desativar{% else %}Ativar{% endif %}">
-                                            <i class="fa-solid {% if gf.ativo %}fa-toggle-on{% else %}fa-toggle-off{% endif %}"></i>
-                                        </button>
-                                    </form>
-                                    <form method="POST" action="{{ url_for('gastos_fixos.excluir_gasto_fixo', gasto_id=gf.id) }}">
-                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                        <button type="submit" class="btn-icon" title="Excluir"><i class="fa-solid fa-trash"></i></button>
-                                    </form>
-                                </div>
-                            </div>
-                            {% endfor %}
-                        </div>
-                        {% else %}
-                        <p class="vazio">Nenhum gasto fixo cadastrado ainda.</p>
-                        {% endif %}
-
-                        {% if mensagem_gastos_fixos %}
-                        <div class="gastos-fixos-insights">
-                            <div class="insight-item">
-                                <p><strong>Análise de gastos fixos</strong></p>
-                                <p>{{ mensagem_gastos_fixos }}</p>
-                            </div>
-
-                            {% if alertas_gastos_fixos %}
-                            {% for alerta in alertas_gastos_fixos %}
-                            <div class="insight-item insight-alerta">{{ alerta }}</div>
-                            {% endfor %}
-                            {% endif %}
-
-                            {% if lancamentos_pendentes.possui_pendentes %}
-                            <div class="lancamentos-pendentes">
-                                <p>{{ lancamentos_pendentes.mensagem }}</p>
-                                <form method="POST" action="{{ url_for('gastos_fixos.lancar_gastos_fixos_mes') }}">
-                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                    <button type="submit" class="btn btn-lancar">Lançar gastos fixos do mês</button>
-                                </form>
-                            </div>
-                            {% else %}
-                            <div class="lancamentos-ok">
-                                <p>Todos os gastos fixos do mês já foram lançados como transações.</p>
-                            </div>
-                            {% endif %}
-                        </div>
-                        {% endif %}
                     </section>
-
-                    <section class="painel-card" id="metas">
+                    <section class="painel-card">
                         <div class="painel-card-header">
                             <div>
-                                <h2>Metas</h2>
-                                <p>Acompanhe progresso, valores guardados e próximos aportes.</p>
+                                <h2>Impacto mensal</h2>
+                                <p>Quanto da saída mensal já está comprometida.</p>
                             </div>
                         </div>
-
-                        <form method="POST" action="{{ url_for('metas.add_meta') }}" class="form-criar-meta">
-                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                            <div class="form-grupo">
-                                <input name="titulo" placeholder="Nome da meta" required>
-                                <input name="valor_meta" type="number" step="0.01" min="0.01" placeholder="Valor alvo" required>
-                                <button class="btn" type="submit">Criar meta</button>
+                        <article class="finance-card meta-card inline-stat">
+                            <span>Total recorrente</span>
+                            <strong>R$ {{ "%.2f"|format(total_gastos_fixos or 0) }}</strong>
+                            <small>{{ "%.1f"|format(percentual_gastos_fixos or 0) }}% das saídas no mês</small>
+                        </article>
+                    </section>
+                </div>
+                <section class="painel-card">
+                    <div class="painel-card-header">
+                        <div>
+                            <h2>Lista e status</h2>
+                            <p>Ative, pause ou exclua recorrências sem mexer nas transações já lançadas.</p>
+                        </div>
+                    </div>
+                    {% if gastos_fixos %}
+                    <div class="gastos-fixos-lista">
+                        {% for gf in gastos_fixos %}
+                        <div class="gasto-fixo-item {% if not gf.ativo %}inativo{% endif %}">
+                            <div>
+                                <p><strong>{{ gf.descricao or "Gasto sem descrição" }}</strong></p>
+                                <small>{{ gf.categoria_nome or "Sem categoria" }} · Dia {{ gf.dia_vencimento or "?" }}</small>
                             </div>
-                        </form>
-
-                        {% if metas %}
-                        <div class="lista-metas">
-                            {% for m in metas %}
-                            {% set valor_atual = m.valor_atual or 0 %}
-                            {% set valor_meta = m.valor_meta or 0 %}
-                            {% set pct = (valor_atual / valor_meta * 100)|round(1) if valor_meta and valor_meta > 0 else 0 %}
-                            <article class="meta-item">
-                                <div class="meta-header">
-                                    <div>
-                                        <h3>{{ m.titulo or "Meta sem nome" }}</h3>
-                                        <small>{{ "%.1f"|format(100 if pct > 100 else pct) }}% concluído</small>
-                                    </div>
-                                    <div class="meta-header-acoes">
-                                        <span class="meta-badge">R$ {{ "%.2f"|format(valor_atual) }} / R$ {{ "%.2f"|format(valor_meta) }}</span>
-                                        <details class="meta-menu">
-                                            <summary class="meta-menu-btn" aria-label="Opções da meta"><i class="fa-solid fa-ellipsis-vertical"></i></summary>
-                                            <div class="meta-menu-content">
-                                                <button class="meta-menu-item" type="button" onclick="document.getElementById('form-editar-{{ m.id }}').showModal()">Editar</button>
-                                                <form method="POST" action="{{ url_for('metas.delete_meta', meta_id=m.id) }}">
-                                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                                    <button class="meta-menu-item meta-menu-item-delete" onclick="return confirm('Tem certeza que deseja excluir esta meta?')">Excluir</button>
-                                                </form>
-                                            </div>
-                                        </details>
-                                    </div>
-                                </div>
-
-                                <div class="barra-meta">
-                                    <div class="progresso-meta" data-progresso="{{ 100 if pct > 100 else pct }}" style="width: {{ 100 if pct > 100 else pct }}%"></div>
-                                </div>
-
-                                <div class="meta-acoes-linha">
-                                    <form method="POST" action="{{ url_for('metas.adicionar_valor_meta', meta_id=m.id) }}" class="meta-form-inline">
-                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                        <input name="valor_adicionar" type="number" step="0.01" min="0.01" placeholder="Adicionar" required>
-                                        <button class="btn-mini btn-adicionar" type="submit" aria-label="Adicionar valor">+</button>
-                                    </form>
-
-                                    <form method="POST" action="{{ url_for('metas.retirar_valor_meta', meta_id=m.id) }}" class="meta-form-inline">
-                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                        <input name="valor_retirar" type="number" step="0.01" min="0.01" placeholder="Retirar" required>
-                                        <button class="btn-mini btn-retirar" type="submit" aria-label="Retirar valor">−</button>
-                                    </form>
-
-                                    <form method="POST" action="{{ url_for('metas.usar_saldo_meta', meta_id=m.id) }}" class="meta-form-inline">
-                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                        <input name="valor_usar_saldo" type="number" step="0.01" min="0.01" placeholder="Usar saldo" required>
-                                        <button class="btn-mini btn-usar-saldo" type="submit" aria-label="Usar saldo na meta"><i class="fa-solid fa-wallet"></i></button>
-                                    </form>
-                                </div>
-
-                                <dialog id="form-editar-{{ m.id }}" class="modal-editar">
-                                    <div class="modal-content">
-                                        <h3>Editar meta</h3>
-                                        <form method="POST" action="{{ url_for('metas.editar_meta', meta_id=m.id) }}">
-                                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                            <div class="modal-form-group">
-                                                <input type="text" name="titulo" value="{{ m.titulo or '' }}" placeholder="Nome da meta" required>
-                                            </div>
-                                            <div class="modal-form-group">
-                                                <input type="number" name="valor_meta" step="0.01" min="0.01" value="{{ valor_meta }}" placeholder="Valor alvo" required>
-                                            </div>
-                                            <div class="modal-form-group modal-buttons">
-                                                <button type="submit" class="btn btn-salvar">Salvar</button>
-                                                <button type="button" class="btn btn-cancelar" onclick="document.getElementById('form-editar-{{ m.id }}').close()">Cancelar</button>
-                                            </div>
-                                        </form>
-                                    </div>
-                                </dialog>
-                            </article>
-                            {% endfor %}
+                            <strong>R$ {{ "%.2f"|format(gf.valor or 0) }}</strong>
+                            <span class="badge {% if gf.lancado_mes %}badge-entrada{% else %}badge-saida{% endif %}">
+                                {% if gf.lancado_mes %}Lançado no mês{% else %}Pendente{% endif %}
+                            </span>
+                            <span class="badge {% if gf.ativo %}badge-entrada{% else %}badge-neutro{% endif %}">{% if gf.ativo %}Ativo{% else %}Inativo{% endif %}</span>
+                            <div class="gasto-fixo-actions">
+                                <form method="POST" action="{{ url_for('gastos_fixos.toggle_gasto_fixo', gasto_id=gf.id) }}">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                    <button type="submit" class="btn-icon" title="{% if gf.ativo %}Desativar{% else %}Ativar{% endif %}"><i class="fa-solid {% if gf.ativo %}fa-toggle-on{% else %}fa-toggle-off{% endif %}"></i></button>
+                                </form>
+                                <form method="POST" action="{{ url_for('gastos_fixos.excluir_gasto_fixo', gasto_id=gf.id) }}">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                    <button type="submit" class="btn-icon" title="Excluir"><i class="fa-solid fa-trash"></i></button>
+                                </form>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <p class="vazio">Nenhum gasto fixo cadastrado ainda.</p>
+                    {% endif %}
+                    {% if mensagem_gastos_fixos %}
+                    <div class="gastos-fixos-insights">
+                        <div class="insight-item"><p><strong>Análise de gastos fixos</strong></p><p>{{ mensagem_gastos_fixos }}</p></div>
+                        {% if alertas_gastos_fixos %}{% for alerta in alertas_gastos_fixos %}<div class="insight-item insight-alerta">{{ alerta }}</div>{% endfor %}{% endif %}
+                        {% if lancamentos_pendentes.possui_pendentes %}
+                        <div class="lancamentos-pendentes">
+                            <p>{{ lancamentos_pendentes.mensagem }}</p>
+                            <form method="POST" action="{{ url_for('gastos_fixos.lancar_gastos_fixos_mes') }}">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <button type="submit" class="btn btn-lancar">Lançar gastos fixos do mês</button>
+                            </form>
                         </div>
                         {% else %}
-                        <p class="vazio">Nenhuma meta criada ainda.</p>
+                        <div class="lancamentos-ok"><p>Todos os gastos fixos do mês já foram lançados como transações.</p></div>
                         {% endif %}
+                    </div>
+                    {% endif %}
+                </section>
+            </section>
+
+            <section class="app-section" id="relatorios" data-section="relatorios" aria-labelledby="titulo-relatorios">
+                <div class="section-heading">
+                    <div>
+                        <p class="section-eyebrow">Relatórios</p>
+                        <h2 id="titulo-relatorios">Comparações, categorias e insights</h2>
+                    </div>
+                </div>
+                <section class="painel-card">
+                    <div class="painel-card-header">
+                        <div>
+                            <h2>Relatórios visuais</h2>
+                            <p>Fluxo financeiro e concentração de gastos por categoria.</p>
+                        </div>
+                        <span class="card-icon"><i class="fa-solid fa-chart-simple"></i></span>
+                    </div>
+                    <div class="graficos-grid-interno">
+                        <div class="grafico-box">
+                            <h3>Gastos por categoria</h3>
+                            <canvas id="graficoCategorias"></canvas>
+                        </div>
+                        <div class="grafico-box">
+                            <h3>Últimos 6 meses</h3>
+                            <canvas id="graficoTendencia"></canvas>
+                        </div>
+                    </div>
+                </section>
+                <section class="painel-card">
+                    <div class="painel-card-header">
+                        <div>
+                            <h2>Análise inteligente</h2>
+                            <p>Alertas e leituras para tomar decisões melhores durante o mês.</p>
+                        </div>
+                        <span class="card-icon"><i class="fa-solid fa-lightbulb"></i></span>
+                    </div>
+                    <div class="insights-container">
+                        {% if mes and mensagem_comparacao %}<div class="insight-item insight-comparacao">{{ mensagem_comparacao }}</div>{% endif %}
+                        {% if maior_categoria %}<div class="insight-item insight-categoria">Maior gasto: <strong>{{ maior_categoria }}</strong> (R$ {{ "%.2f"|format(maior_valor) }})</div>{% endif %}
+                        {% if previsao_mensagem %}<div class="insight-item insight-previsao">{{ previsao_mensagem }}</div>{% endif %}
+                        {% if alertas %}<div class="alertas-box">{% for alerta in alertas %}<div class="insight-item insight-alerta">{{ alerta }}</div>{% endfor %}</div>{% endif %}
+                        {% if alertas_metas %}<div class="alertas-metas">{% for alerta_meta in alertas_metas %}<div class="insight-item {% if alerta_meta.tipo == 'erro' %}insight-alerta{% else %}insight-aviso{% endif %}">{{ alerta_meta.mensagem }}</div>{% endfor %}</div>{% endif %}
+                        {% if insights %}<div class="insights-classicos">{% for insight in insights %}<p>{{ insight }}</p>{% endfor %}</div>{% endif %}
+                        {% if not mensagem_comparacao and not maior_categoria and not previsao_mensagem and not alertas and not alertas_metas and not insights %}<p class="vazio">Registre transações para gerar insights financeiros.</p>{% endif %}
+                    </div>
+                </section>
+            </section>
+
+            <section class="app-section" id="configuracoes" data-section="configuracoes" aria-labelledby="titulo-configuracoes">
+                <div class="section-heading">
+                    <div>
+                        <p class="section-eyebrow">Configurações</p>
+                        <h2 id="titulo-configuracoes">Perfil e preferências</h2>
+                    </div>
+                </div>
+                <div class="split-layout">
+                    <section class="painel-card">
+                        <div class="painel-card-header">
+                            <div>
+                                <h2>Perfil</h2>
+                                <p>Informações usadas para personalizar o painel.</p>
+                            </div>
+                            <span class="card-icon"><i class="fa-solid fa-user"></i></span>
+                        </div>
+                        <div class="settings-list">
+                            <div><span>Nome</span><strong>{{ nome }}</strong></div>
+                            <div><span>Período ativo</span><strong>{{ mes or "Mês atual" }}</strong></div>
+                        </div>
+                    </section>
+                    <section class="painel-card">
+                        <div class="painel-card-header">
+                            <div>
+                                <h2>Aparência</h2>
+                                <p>O tema claro/escuro continua salvo no navegador.</p>
+                            </div>
+                            <span class="card-icon"><i class="fa-solid fa-circle-half-stroke"></i></span>
+                        </div>
+                        <button class="btn" type="button" data-theme-toggle><i class="fa-solid fa-circle-half-stroke"></i> Alternar tema</button>
                     </section>
                 </div>
             </section>
+
+            <div id="dados-graficos" data-entradas="{{ total_entradas }}" data-saidas="{{ total_saidas }}" data-categorias-labels='{{ categorias_labels | tojson | safe }}' data-categorias-valores='{{ categorias_valores | tojson | safe }}'></div>
+            <div id="dados-tendencia" data-labels='{{ tendencia_labels | tojson | safe }}' data-entradas='{{ tendencia_entradas | tojson | safe }}' data-saidas='{{ tendencia_saidas | tojson | safe }}' data-saldo='{{ tendencia_saldo | tojson | safe }}' data-evolucao-labels='{{ evolucao_labels | tojson | safe }}' data-evolucao-entradas='{{ evolucao_entradas | tojson | safe }}' data-evolucao-saidas='{{ evolucao_saidas | tojson | safe }}' data-evolucao-saldo='{{ evolucao_saldo | tojson | safe }}'></div>
         </div>
     </main>
 </div>

@@ -1,7 +1,7 @@
 import os
 from datetime import timedelta
 from pathlib import Path
-from flask import Flask, render_template
+from flask import Flask, flash, redirect, render_template, request, session, url_for
 from dotenv import load_dotenv
 from flask_wtf.csrf import CSRFProtect, CSRFError
 
@@ -53,6 +53,15 @@ def home():
     return render_template("landing.html")
 
 
+@app.after_request
+def aplicar_headers_cache(response):
+    if request.endpoint == "dashboard.app_dashboard":
+        response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
+        response.headers["Pragma"] = "no-cache"
+        response.headers["Expires"] = "0"
+    return response
+
+
 @app.errorhandler(400)
 def erro_400(e):
     return render_template("erro.html", codigo=400, titulo="Requisição inválida", mensagem="A solicitação não pôde ser processada."), 400
@@ -74,6 +83,16 @@ def erro_500(e):
 
 @app.errorhandler(CSRFError)
 def handle_csrf_error(e):
+    if session.get("usuario_id"):
+        flash("Sua sessão do formulário expirou. Recarregamos o painel; tente a ação novamente.", "erro")
+        return redirect(url_for("dashboard.app_dashboard"))
+
+    if request.endpoint in {"auth.login", "auth.register"}:
+        return render_template(
+            request.endpoint.split(".")[-1] + ".html",
+            erro="Sua sessão expirou. Recarregue a página e tente novamente."
+        ), 400
+
     return render_template(
         "erro.html",
         codigo=400,

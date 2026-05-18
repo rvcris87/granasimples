@@ -618,6 +618,7 @@ def buscar_gastos_fixos(usuario_id, conn=None):
     fechar_conn = conn is None
     conn = conn or conectar()
     cur = conn.cursor()
+    mes_atual = date.today().strftime("%Y-%m")
 
     cur.execute("""
         SELECT
@@ -627,12 +628,19 @@ def buscar_gastos_fixos(usuario_id, conn=None):
             gf.categoria_id,
             gf.dia_vencimento,
             gf.ativo,
-            c.nome AS categoria_nome
+            c.nome AS categoria_nome,
+            EXISTS (
+                SELECT 1
+                FROM transacoes t
+                WHERE t.usuario_id = gf.usuario_id
+                  AND t.gasto_fixo_id = gf.id
+                  AND t.referencia_mes = %s
+            ) AS lancado_mes
         FROM gastos_fixos gf
         LEFT JOIN categorias c ON gf.categoria_id = c.id
         WHERE gf.usuario_id = %s
         ORDER BY gf.dia_vencimento ASC
-    """, (usuario_id,))
+    """, (mes_atual, usuario_id))
 
     gastos_fixos = cur.fetchall()
     if fechar_conn:
