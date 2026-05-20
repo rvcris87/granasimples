@@ -2,9 +2,9 @@ from flask import Blueprint, request, redirect, url_for, session, flash
 import logging
 from decorators import login_required
 from db import conectar
-from datetime import datetime, date
+from datetime import date
 import calendar
-from utils import redirecionar_dashboard
+from utils import parse_mes, redirecionar_dashboard
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -15,34 +15,35 @@ gastos_fixos_bp = Blueprint("gastos_fixos", __name__)
 @login_required
 def add_gasto_fixo():
     usuario_id = session["usuario_id"]
+    mes_dashboard = request.form.get("mes", "").strip()
     descricao = request.form.get("descricao", "").strip()
     valor = request.form.get("valor", "").strip()
     categoria_id = request.form.get("categoria_id", "").strip()
     dia_vencimento = request.form.get("dia_vencimento", "").strip()
 
     if not descricao or not valor or not dia_vencimento:
-        return redirecionar_dashboard("Preencha os campos do gasto fixo.", "erro")
+        return redirecionar_dashboard("Preencha os campos do gasto fixo.", "erro", mes_dashboard)
 
     try:
         valor = float(valor)
     except ValueError:
-        return redirecionar_dashboard("Valor inválido.", "erro")
+        return redirecionar_dashboard("Valor inválido.", "erro", mes_dashboard)
 
     if valor <= 0:
-        return redirecionar_dashboard("O valor deve ser maior que zero.", "erro")
+        return redirecionar_dashboard("O valor deve ser maior que zero.", "erro", mes_dashboard)
 
     try:
         dia_vencimento = int(dia_vencimento)
     except ValueError:
-        return redirecionar_dashboard("Dia de vencimento inválido.", "erro")
+        return redirecionar_dashboard("Dia de vencimento inválido.", "erro", mes_dashboard)
 
     if dia_vencimento < 1 or dia_vencimento > 31:
-        return redirecionar_dashboard("O dia de vencimento deve estar entre 1 e 31.", "erro")
+        return redirecionar_dashboard("O dia de vencimento deve estar entre 1 e 31.", "erro", mes_dashboard)
 
     try:
         categoria_id = int(categoria_id) if categoria_id else None
     except ValueError:
-        return redirecionar_dashboard("Categoria inválida.", "erro")
+        return redirecionar_dashboard("Categoria inválida.", "erro", mes_dashboard)
 
     conn = None
     try:
@@ -57,9 +58,9 @@ def add_gasto_fixo():
             """, (categoria_id, usuario_id))
             categoria = cur.fetchone()
             if not categoria:
-                return redirecionar_dashboard("Categoria não encontrada.", "erro")
+                return redirecionar_dashboard("Categoria não encontrada.", "erro", mes_dashboard)
             if categoria["tipo"] != "saida":
-                return redirecionar_dashboard("Gastos fixos devem usar uma categoria de saída.", "erro")
+                return redirecionar_dashboard("Gastos fixos devem usar uma categoria de saída.", "erro", mes_dashboard)
 
         cur.execute("""
             INSERT INTO gastos_fixos (usuario_id, descricao, valor, categoria_id, dia_vencimento, ativo)
@@ -67,13 +68,13 @@ def add_gasto_fixo():
         """, (usuario_id, descricao, valor, categoria_id, dia_vencimento))
 
         conn.commit()
-        return redirecionar_dashboard("Gasto fixo adicionado com sucesso.", "sucesso")
+        return redirecionar_dashboard("Gasto fixo adicionado com sucesso.", "sucesso", mes_dashboard)
 
     except Exception as e:
         if conn:
             conn.rollback()
         logger.exception(f"Erro ao adicionar gasto fixo para usuário {usuario_id}: {e}")
-        return redirecionar_dashboard("Não foi possível salvar o gasto fixo. Tente novamente.", "erro")
+        return redirecionar_dashboard("Não foi possível salvar o gasto fixo. Tente novamente.", "erro", mes_dashboard)
     finally:
         if conn:
             conn.close()
@@ -83,6 +84,7 @@ def add_gasto_fixo():
 @login_required
 def toggle_gasto_fixo(gasto_id):
     usuario_id = session["usuario_id"]
+    mes_dashboard = request.form.get("mes", "").strip()
     conn = None
 
     try:
@@ -110,13 +112,14 @@ def toggle_gasto_fixo(gasto_id):
         if conn:
             conn.close()
 
-    return redirect(url_for("dashboard.app_dashboard"))
+    return redirect(url_for("dashboard.app_dashboard", mes=mes_dashboard) if mes_dashboard else url_for("dashboard.app_dashboard"))
 
 
 @gastos_fixos_bp.route("/excluir_gasto_fixo/<int:gasto_id>", methods=["POST"])
 @login_required
 def excluir_gasto_fixo(gasto_id):
     usuario_id = session["usuario_id"]
+    mes_dashboard = request.form.get("mes", "").strip()
     conn = None
 
     try:
@@ -143,19 +146,19 @@ def excluir_gasto_fixo(gasto_id):
         if conn:
             conn.close()
 
-    return redirect(url_for("dashboard.app_dashboard"))
+    return redirect(url_for("dashboard.app_dashboard", mes=mes_dashboard) if mes_dashboard else url_for("dashboard.app_dashboard"))
 
 
 @gastos_fixos_bp.route("/lancar_gastos_fixos_mes", methods=["POST"])
 @login_required
 def lancar_gastos_fixos_mes():
     usuario_id = session["usuario_id"]
-    mes_referencia = request.form.get("mes", "").strip() or date.today().strftime("%Y-%m")
+    mes_referencia = request.form.get("mes", "").strip()
 
     try:
-        datetime.strptime(mes_referencia, "%Y-%m")
+        parse_mes(mes_referencia)
     except ValueError:
-        flash("Formato de mês inválido.", "erro")
+        flash("Mês de lançamento inválido. Use o filtro do painel antes de lançar gastos fixos.", "erro")
         return redirect(url_for("dashboard.app_dashboard"))
 
     conn = None
@@ -207,9 +210,9 @@ def lancar_gastos_fixos_mes():
         conn.commit()
 
         if lancados:
-            flash(f"{lancados} gasto(s) fixo(s) lançado(s) com sucesso.", "sucesso")
+            flash(f"{lancados} gasto(s) fixo(s) lançado(s) em {mes_referencia} com sucesso.", "sucesso")
         else:
-            flash("Todos os gastos fixos já foram lançados neste mês.", "aviso")
+            flash(f"Todos os gastos fixos já foram lançados em {mes_referencia}.", "aviso")
 
     except Exception as e:
         if conn:
@@ -220,4 +223,4 @@ def lancar_gastos_fixos_mes():
         if conn:
             conn.close()
 
-    return redirect(url_for("dashboard.app_dashboard"))
+    return redirect(url_for("dashboard.app_dashboard", mes=mes_referencia))

@@ -1,7 +1,7 @@
 -- Melhora a integridade das metas e vincula transações geradas por metas.
 
 ALTER TABLE transacoes
-ADD COLUMN IF NOT EXISTS meta_id INTEGER REFERENCES metas(id) ON DELETE CASCADE;
+ADD COLUMN IF NOT EXISTS meta_id INTEGER REFERENCES metas(id) ON DELETE SET NULL;
 
 CREATE INDEX IF NOT EXISTS idx_transacoes_usuario_meta_id
 ON transacoes (usuario_id, meta_id);

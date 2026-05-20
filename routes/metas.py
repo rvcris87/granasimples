@@ -50,10 +50,18 @@ def meta_duplicada(cur, usuario_id, titulo, meta_id=None):
         FROM metas
         WHERE usuario_id = %s
           AND lower(trim(titulo)) = lower(trim(%s))
+          AND COALESCE(ativo, TRUE) = TRUE
           {filtro_id}
         LIMIT 1
     """, params)
     return cur.fetchone() is not None
+
+
+def registrar_movimentacao_meta(cur, usuario_id, meta_id, tipo, valor, observacao):
+    cur.execute("""
+        INSERT INTO meta_movimentacoes (usuario_id, meta_id, tipo, valor, observacao)
+        VALUES (%s, %s, %s, %s, %s)
+    """, (usuario_id, meta_id, tipo, valor, observacao))
 
 
 def garantir_categoria_meta(cur, usuario_id, nome, tipo):
@@ -107,10 +115,6 @@ def add_meta():
             VALUES (%s, %s, %s, 0)
         """, (usuario_id, titulo, valor_meta))
 
-        nome_saida, nome_entrada = nomes_categorias_meta(titulo)
-        garantir_categoria_meta(cur, usuario_id, nome_saida, "saida")
-        garantir_categoria_meta(cur, usuario_id, nome_entrada, "entrada")
-
         conn.commit()
         return redirecionar_dashboard("Meta criada com sucesso.", "sucesso")
 
@@ -145,7 +149,7 @@ def adicionar_valor_meta(meta_id):
         cur.execute("""
             SELECT id, titulo, valor_atual, valor_meta
             FROM metas
-            WHERE id = %s AND usuario_id = %s
+            WHERE id = %s AND usuario_id = %s AND COALESCE(ativo, TRUE) = TRUE
         """, (meta_id, usuario_id))
         meta = cur.fetchone()
 
@@ -163,10 +167,14 @@ def adicionar_valor_meta(meta_id):
             WHERE id = %s AND usuario_id = %s
         """, (novo_valor_atual, meta_id, usuario_id))
 
-        cur.execute("""
-            INSERT INTO transacoes (usuario_id, descricao, valor, tipo, data, meta_id)
-            VALUES (%s, %s, %s, 'saida', CURRENT_DATE, %s)
-        """, (usuario_id, f"Reserva para meta: {meta['titulo']}", valor, meta_id))
+        registrar_movimentacao_meta(
+            cur,
+            usuario_id,
+            meta_id,
+            "aporte",
+            valor,
+            f"Valor adicionado à meta: {meta['titulo']}"
+        )
 
         conn.commit()
         return redirecionar_dashboard("Valor adicionado à meta com sucesso.", "sucesso")
@@ -202,7 +210,7 @@ def retirar_valor_meta(meta_id):
         cur.execute("""
             SELECT id, titulo, valor_atual
             FROM metas
-            WHERE id = %s AND usuario_id = %s
+            WHERE id = %s AND usuario_id = %s AND COALESCE(ativo, TRUE) = TRUE
         """, (meta_id, usuario_id))
         meta = cur.fetchone()
 
@@ -222,10 +230,14 @@ def retirar_valor_meta(meta_id):
             WHERE id = %s AND usuario_id = %s
         """, (novo_valor_atual, meta_id, usuario_id))
 
-        cur.execute("""
-            INSERT INTO transacoes (usuario_id, descricao, valor, tipo, data, meta_id)
-            VALUES (%s, %s, %s, 'entrada', CURRENT_DATE, %s)
-        """, (usuario_id, f"Retirada da meta: {meta['titulo']}", valor, meta_id))
+        registrar_movimentacao_meta(
+            cur,
+            usuario_id,
+            meta_id,
+            "retirada",
+            valor,
+            f"Valor retirado da meta: {meta['titulo']}"
+        )
 
         conn.commit()
         return redirecionar_dashboard("Valor retirado da meta com sucesso.", "sucesso")
@@ -261,7 +273,7 @@ def usar_saldo_meta(meta_id):
         cur.execute("""
             SELECT id, titulo, valor_atual, valor_meta
             FROM metas
-            WHERE id = %s AND usuario_id = %s
+            WHERE id = %s AND usuario_id = %s AND COALESCE(ativo, TRUE) = TRUE
         """, (meta_id, usuario_id))
         meta = cur.fetchone()
 
@@ -274,8 +286,19 @@ def usar_saldo_meta(meta_id):
                 COALESCE(SUM(CASE WHEN tipo = 'saida' THEN valor ELSE 0 END), 0) AS saldo
             FROM transacoes
             WHERE usuario_id = %s
+              AND meta_id IS NULL
         """, (usuario_id,))
-        saldo_disponivel = Decimal(cur.fetchone()["saldo"] or 0)
+        saldo_real = Decimal(cur.fetchone()["saldo"] or 0)
+
+        cur.execute("""
+            SELECT COALESCE(SUM(valor_atual), 0) AS total_reservado
+            FROM metas
+            WHERE usuario_id = %s
+              AND id <> %s
+              AND COALESCE(ativo, TRUE) = TRUE
+        """, (usuario_id, meta_id))
+        total_reservado_outras_metas = Decimal(cur.fetchone()["total_reservado"] or 0)
+        saldo_disponivel = saldo_real - total_reservado_outras_metas
 
         if saldo_disponivel < valor:
             return redirecionar_dashboard("Saldo insuficiente para enviar esse valor para a meta.", "erro")
@@ -291,10 +314,14 @@ def usar_saldo_meta(meta_id):
             WHERE id = %s AND usuario_id = %s
         """, (novo_valor_atual, meta_id, usuario_id))
 
-        cur.execute("""
-            INSERT INTO transacoes (usuario_id, descricao, valor, tipo, data, meta_id)
-            VALUES (%s, %s, %s, 'saida', CURRENT_DATE, %s)
-        """, (usuario_id, f"Uso de saldo para meta: {meta['titulo']}", valor, meta_id))
+        registrar_movimentacao_meta(
+            cur,
+            usuario_id,
+            meta_id,
+            "uso_saldo",
+            valor,
+            f"Saldo reservado para meta: {meta['titulo']}"
+        )
 
         conn.commit()
         return redirecionar_dashboard("Saldo enviado para a meta com sucesso.", "sucesso")
@@ -332,7 +359,7 @@ def editar_meta(meta_id):
         cur.execute("""
             SELECT id, titulo, valor_atual
             FROM metas
-            WHERE id = %s AND usuario_id = %s
+            WHERE id = %s AND usuario_id = %s AND COALESCE(ativo, TRUE) = TRUE
         """, (meta_id, usuario_id))
         meta = cur.fetchone()
 
@@ -345,58 +372,11 @@ def editar_meta(meta_id):
         if meta_duplicada(cur, usuario_id, titulo, meta_id):
             return redirecionar_dashboard("Essa meta já existe.", "erro")
 
-        titulo_antigo = meta["titulo"]
-
         cur.execute("""
             UPDATE metas
             SET titulo = %s, valor_meta = %s
             WHERE id = %s AND usuario_id = %s
         """, (titulo, valor_meta, meta_id, usuario_id))
-
-        nome_saida_antigo, nome_entrada_antigo = nomes_categorias_meta(titulo_antigo)
-        nome_saida_novo, nome_entrada_novo = nomes_categorias_meta(titulo)
-
-        cur.execute("""
-            UPDATE categorias
-            SET nome = %s
-            WHERE usuario_id = %s
-              AND nome = %s
-              AND tipo = 'saida'
-        """, (nome_saida_novo, usuario_id, nome_saida_antigo))
-
-        cur.execute("""
-            UPDATE categorias
-            SET nome = %s
-            WHERE usuario_id = %s
-              AND nome = %s
-              AND tipo = 'entrada'
-        """, (nome_entrada_novo, usuario_id, nome_entrada_antigo))
-
-        cur.execute("""
-            UPDATE transacoes
-            SET descricao = %s
-            WHERE usuario_id = %s
-              AND meta_id = %s
-              AND descricao = %s
-        """, (
-            f"Reserva para meta: {titulo}",
-            usuario_id,
-            meta_id,
-            f"Reserva para meta: {titulo_antigo}"
-        ))
-
-        cur.execute("""
-            UPDATE transacoes
-            SET descricao = %s
-            WHERE usuario_id = %s
-              AND meta_id = %s
-              AND descricao = %s
-        """, (
-            f"Retirada da meta: {titulo}",
-            usuario_id,
-            meta_id,
-            f"Retirada da meta: {titulo_antigo}"
-        ))
 
         conn.commit()
         return redirecionar_dashboard("Meta atualizada com sucesso.", "sucesso")
@@ -424,48 +404,22 @@ def delete_meta(meta_id):
         cur.execute("""
             SELECT id, titulo
             FROM metas
-            WHERE id = %s AND usuario_id = %s
+            WHERE id = %s AND usuario_id = %s AND COALESCE(ativo, TRUE) = TRUE
         """, (meta_id, usuario_id))
         meta = cur.fetchone()
 
         if not meta:
             return redirecionar_dashboard("Meta não encontrada.", "erro")
 
-        titulo_meta = meta["titulo"]
-        nome_saida, nome_entrada = nomes_categorias_meta(titulo_meta)
-
         cur.execute("""
-            DELETE FROM transacoes
-            WHERE usuario_id = %s
-              AND (
-                  meta_id = %s
-                  OR descricao IN (%s, %s)
-              )
-        """, (
-            usuario_id,
-            meta_id,
-            f"Reserva para meta: {titulo_meta}",
-            f"Retirada da meta: {titulo_meta}",
-        ))
-
-        cur.execute("""
-            DELETE FROM categorias
-            WHERE usuario_id = %s
-              AND nome IN (%s, %s)
-              AND NOT EXISTS (
-                  SELECT 1 FROM transacoes t
-                  WHERE t.usuario_id = categorias.usuario_id
-                    AND t.categoria_id = categorias.id
-              )
-        """, (usuario_id, nome_saida, nome_entrada))
-
-        cur.execute("""
-            DELETE FROM metas
+            UPDATE metas
+            SET ativo = FALSE,
+                arquivada_em = CURRENT_TIMESTAMP
             WHERE id = %s AND usuario_id = %s
         """, (meta_id, usuario_id))
 
         conn.commit()
-        return redirecionar_dashboard("Meta excluída com sucesso.", "sucesso")
+        return redirecionar_dashboard("Meta arquivada com sucesso. O histórico financeiro foi preservado.", "sucesso")
 
     except Exception as e:
         if conn:

@@ -82,15 +82,24 @@
             </header>
 
             <section class="app-section is-active" id="visao-geral" data-section="visao-geral" aria-labelledby="titulo-visao-geral">
+                {% set uso_categorias_safe = uso_categorias | default({}, true) %}
+                {% set movimentacoes_metas_safe = movimentacoes_metas | default({}, true) %}
+                {% set reservado_metas = (metas | sum(attribute='valor_atual') | float) if metas else 0.0 %}
+                {% set saldo_disponivel = (saldo or 0) - (reservado_metas or 0) %}
                 <div class="section-heading">
                     <div>
                         <p class="section-eyebrow">Visão geral</p>
-                        <h2 id="titulo-visao-geral">Resumo do mês</h2>
+                        <h2 id="titulo-visao-geral">Como está meu mês?</h2>
                     </div>
                     <a href="#transacoes" class="btn btn-secundario" data-section-link="transacoes"><i class="fa-solid fa-plus"></i> Nova transação</a>
                 </div>
 
                 <section class="resumo-cards" aria-label="Resumo financeiro">
+                    <article class="finance-card saldo-card destaque-card">
+                        <span>Saldo disponível</span>
+                        <strong>R$ {{ "%.2f"|format(saldo_disponivel or 0) }}</strong>
+                        <small>Saldo atual menos reservas já guardadas em metas</small>
+                    </article>
                     <article class="finance-card entrada-card">
                         <span>Entradas</span>
                         <strong>R$ {{ "%.2f"|format(total_entradas or 0) }}</strong>
@@ -101,15 +110,25 @@
                         <strong>R$ {{ "%.2f"|format(total_saidas or 0) }}</strong>
                         <small>Despesas e reservas lançadas</small>
                     </article>
-                    <article class="finance-card saldo-card">
-                        <span>Saldo</span>
-                        <strong>R$ {{ "%.2f"|format(saldo or 0) }}</strong>
-                        <small>Diferença entre entradas e saídas</small>
-                    </article>
                     <article class="finance-card meta-card">
                         <span>Gastos fixos</span>
                         <strong>R$ {{ "%.2f"|format(total_gastos_fixos or 0) }}</strong>
                         <small>{{ "%.1f"|format(percentual_gastos_fixos or 0) }}% das saídas do mês</small>
+                    </article>
+                </section>
+                <section class="insights-curtos" aria-label="Resumo rápido do mês">
+                    <article class="insight-item insight-{{ inteligencia.status_comparacao or 'neutro' }}">
+                        <strong>Alerta principal:</strong> {{ inteligencia.alerta_gastos }}
+                    </article>
+                    <article class="insight-item">
+                        <strong>Leitura:</strong>
+                        {% if saldo_disponivel < 0 %}
+                        Você já consumiu mais do que o disponível para o mês.
+                        {% elif total_entradas > 0 %}
+                        Suas saídas representam {{ "%.1f"|format(((total_saidas or 0) / (total_entradas or 1)) * 100) }}% das entradas.
+                        {% else %}
+                        Registre entradas para acompanhar sua taxa de comprometimento mensal.
+                        {% endif %}
                     </article>
                 </section>
 
@@ -259,33 +278,24 @@
                     <div class="painel-card-header">
                         <div>
                             <h2>Lista de transações</h2>
-                            <p>Edição e exclusão continuam conectadas ao backend atual.</p>
+                            <p>Histórico financeiro com foco em leitura rápida.</p>
                         </div>
                     </div>
                     {% if transacoes %}
-                    <div class="transacoes-table-wrap">
-                        <table class="transacoes-table">
-                            <thead>
-                                <tr>
-                                    <th>Descrição</th>
-                                    <th>Tipo</th>
-                                    <th>Valor</th>
-                                    <th>Ações</th>
-                                </tr>
-                            </thead>
-                            <tbody>
+                    <div class="transacoes-lista">
                             {% for t in transacoes %}
-                                <tr data-transaction-row data-type="{{ t.tipo }}" data-search="{{ (t.descricao or '')|lower }} {{ (t.categoria_nome or '')|lower }}">
-                                    <td>
-                                        <div class="transacao-descricao">{{ t.descricao or "Sem descrição" }}</div>
-                                        <div class="transacao-meta">{{ t.categoria_nome or "Sem categoria" }} · {% if t.data %}{{ t.data.strftime('%d/%m/%Y') }}{% else %}Data desconhecida{% endif %}</div>
-                                    </td>
-                                    <td><span class="badge {% if t.tipo == 'entrada' %}badge-entrada{% else %}badge-saida{% endif %}">{{ "Entrada" if t.tipo == "entrada" else "Saída" }}</span></td>
-                                    <td><strong class="{% if t.tipo == 'entrada' %}entrada{% else %}saida{% endif %}">{% if t.tipo == "entrada" %}+{% else %}-{% endif %} R$ {{ "%.2f"|format(t.valor or 0) }}</strong></td>
-                                    <td>
+                                <article class="transacao-card" data-transaction-row data-type="{{ t.tipo }}" data-search="{{ (t.descricao or '')|lower }} {{ (t.categoria_nome or '')|lower }}">
+                                    <div class="transacao-card-topo">
+                                        <p class="transacao-data">{% if t.data %}{{ t.data.strftime('%d/%m/%Y') }}{% else %}Sem data{% endif %}</p>
+                                        <span class="badge {% if t.tipo == 'entrada' %}badge-entrada{% else %}badge-saida{% endif %}">{{ "Entrada" if t.tipo == "entrada" else "Saída" }}</span>
+                                    </div>
+                                    <div class="transacao-descricao">{{ t.descricao or "Sem descrição" }}</div>
+                                    <div class="transacao-meta">{{ t.categoria_nome or "Sem categoria" }}</div>
+                                    <div class="transacao-lado-direito">
+                                        <strong class="{% if t.tipo == 'entrada' %}entrada{% else %}saida{% endif %}">{% if t.tipo == "entrada" %}+{% else %}-{% endif %} R$ {{ "%.2f"|format(t.valor or 0) }}</strong>
                                         <div class="table-actions">
                                             <details class="editar-transacao">
-                                                <summary>Editar</summary>
+                                                <summary class="btn-icon" aria-label="Editar transação"><i class="fa-solid fa-pen"></i></summary>
                                                 <form method="POST" action="{{ url_for('transacoes.editar_transacao', transacao_id=t.id) }}">
                                                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                                     <input type="text" name="descricao" value="{{ t.descricao or '' }}" placeholder="Descrição" required>
@@ -304,20 +314,22 @@
                                                     <button type="submit" class="btn">Salvar</button>
                                                 </form>
                                             </details>
-                                            <form method="POST" action="{{ url_for('transacoes.excluir_transacao', transacao_id=t.id) }}" class="form-excluir-transacao">
+                                            <form method="POST" action="{{ url_for('transacoes.excluir_transacao', transacao_id=t.id) }}" class="form-excluir-transacao" data-confirm-form>
                                                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                                <button type="submit" class="btn-link-perigo" onclick="return confirm('Excluir esta transação?')">Excluir</button>
+                                                <button type="submit" class="btn-icon btn-icon-danger" data-confirm-message="Excluir esta transação? Essa ação não poderá ser desfeita." title="Excluir"><i class="fa-solid fa-trash"></i></button>
                                             </form>
                                         </div>
-                                    </td>
-                                </tr>
+                                    </div>
+                                </article>
                             {% endfor %}
-                            </tbody>
-                        </table>
                     </div>
                     <p class="vazio is-hidden" data-transaction-empty>Nenhuma transação encontrada para esses filtros.</p>
                     {% else %}
-                    <p class="vazio">Nenhuma transação cadastrada ainda.</p>
+                    <div class="vazio estado-vazio">
+                        <i class="fa-solid fa-receipt"></i>
+                        <p>Nenhuma transação cadastrada ainda.</p>
+                        <a href="#nova-transacao" class="btn btn-secundario">Registrar primeira transação</a>
+                    </div>
                     {% endif %}
                 </section>
             </section>
@@ -333,7 +345,7 @@
                     <div class="painel-card-header">
                         <div>
                             <h2>Cadastro de categorias</h2>
-                            <p>Organize os relatórios e filtros com nomes consistentes.</p>
+                            <p>Categorias agrupam transações e recorrências. Separar entrada e saída mantém relatórios mais confiáveis.</p>
                         </div>
                         <span class="card-icon"><i class="fa-solid fa-tags"></i></span>
                     </div>
@@ -354,7 +366,11 @@
                             <div class="lista-categorias">
                                 {% for c in categorias if c.tipo == "entrada" %}
                                 <details class="categoria-item">
+                                    {% set uso = uso_categorias_safe.get(c.id, {'total': 0, 'em_uso': False, 'transacoes': 0, 'gastos_fixos': 0}) %}
                                     <summary><span>{{ c.nome }}</span><small class="badge badge-entrada">Entrada</small></summary>
+                                    <p class="categoria-uso {% if uso.em_uso %}em-uso{% endif %}">
+                                        {% if uso.em_uso %}Em uso: {{ uso.total }} registro(s){% else %}Sem uso no histórico{% endif %}
+                                    </p>
                                     <form method="POST" action="{{ url_for('categorias.editar_categoria', categoria_id=c.id) }}">
                                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                         <input type="text" name="nome" value="{{ c.nome }}" minlength="2" required>
@@ -377,7 +393,11 @@
                             <div class="lista-categorias">
                                 {% for c in categorias if c.tipo == "saida" %}
                                 <details class="categoria-item">
+                                    {% set uso = uso_categorias_safe.get(c.id, {'total': 0, 'em_uso': False, 'transacoes': 0, 'gastos_fixos': 0}) %}
                                     <summary><span>{{ c.nome }}</span><small class="badge badge-saida">Saída</small></summary>
+                                    <p class="categoria-uso {% if uso.em_uso %}em-uso{% endif %}">
+                                        {% if uso.em_uso %}Em uso: {{ uso.total }} registro(s){% else %}Sem uso no histórico{% endif %}
+                                    </p>
                                     <form method="POST" action="{{ url_for('categorias.editar_categoria', categoria_id=c.id) }}">
                                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                         <input type="text" name="nome" value="{{ c.nome }}" minlength="2" required>
@@ -412,8 +432,8 @@
                 <section class="painel-card">
                     <div class="painel-card-header">
                         <div>
-                            <h2>Minhas metas</h2>
-                            <p>Acompanhe progresso, valores guardados e próximos aportes.</p>
+                            <h2>Minhas reservas</h2>
+                            <p>Transforme metas em reservas com aporte, retirada e uso de saldo com rastreabilidade.</p>
                         </div>
                     </div>
                     <form method="POST" action="{{ url_for('metas.add_meta') }}" class="form-criar-meta">
@@ -444,7 +464,7 @@
                                             <button class="meta-menu-item" type="button" onclick="document.getElementById('form-editar-{{ m.id }}').showModal()">Editar</button>
                                             <form method="POST" action="{{ url_for('metas.delete_meta', meta_id=m.id) }}">
                                                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                                <button class="meta-menu-item meta-menu-item-delete" onclick="return confirm('Tem certeza que deseja excluir esta meta?')">Excluir</button>
+                                                <button class="meta-menu-item meta-menu-item-delete" onclick="return confirm('Arquivar esta meta? O histórico financeiro e as movimentações da meta serão preservados.')">Arquivar</button>
                                             </form>
                                         </div>
                                     </details>
@@ -457,12 +477,12 @@
                                 <form method="POST" action="{{ url_for('metas.adicionar_valor_meta', meta_id=m.id) }}" class="meta-form-inline">
                                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                     <input name="valor_adicionar" type="number" step="0.01" min="0.01" placeholder="Adicionar" required>
-                                    <button class="btn-mini btn-adicionar" type="submit" aria-label="Adicionar valor">+</button>
+                                    <button class="btn-mini btn-adicionar" type="submit" aria-label="Adicionar valor"><i class="fa-solid fa-plus"></i></button>
                                 </form>
                                 <form method="POST" action="{{ url_for('metas.retirar_valor_meta', meta_id=m.id) }}" class="meta-form-inline">
                                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                     <input name="valor_retirar" type="number" step="0.01" min="0.01" placeholder="Retirar" required>
-                                    <button class="btn-mini btn-retirar" type="submit" aria-label="Retirar valor">−</button>
+                                    <button class="btn-mini btn-retirar" type="submit" aria-label="Retirar valor"><i class="fa-solid fa-minus"></i></button>
                                 </form>
                                 <form method="POST" action="{{ url_for('metas.usar_saldo_meta', meta_id=m.id) }}" class="meta-form-inline">
                                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
@@ -470,6 +490,19 @@
                                     <button class="btn-mini btn-usar-saldo" type="submit" aria-label="Usar saldo na meta"><i class="fa-solid fa-wallet"></i></button>
                                 </form>
                             </div>
+                            {% set historico_meta = movimentacoes_metas_safe.get(m.id, []) %}
+                            {% if historico_meta %}
+                            <div class="meta-historico">
+                                <p class="meta-historico-titulo">Últimas movimentações</p>
+                                {% for mov in historico_meta %}
+                                <div class="meta-historico-item">
+                                    <span>{{ mov.criado_em.strftime('%d/%m/%Y') if mov.criado_em else 'Data desconhecida' }}</span>
+                                    <span>{{ mov.tipo }}</span>
+                                    <strong>R$ {{ "%.2f"|format(mov.valor or 0) }}</strong>
+                                </div>
+                                {% endfor %}
+                            </div>
+                            {% endif %}
                             <dialog id="form-editar-{{ m.id }}" class="modal-editar">
                                 <div class="modal-content">
                                     <h3>Editar meta</h3>
@@ -510,6 +543,7 @@
                         </div>
                         <form method="POST" action="{{ url_for('gastos_fixos.add_gasto_fixo') }}" class="form-stack">
                             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <input type="hidden" name="mes" value="{{ mes_referencia }}">
                             <input type="text" name="descricao" placeholder="Descrição do gasto" required>
                             <input type="number" step="0.01" name="valor" placeholder="Valor" required>
                             <select name="categoria_id">
@@ -557,11 +591,13 @@
                             <div class="gasto-fixo-actions">
                                 <form method="POST" action="{{ url_for('gastos_fixos.toggle_gasto_fixo', gasto_id=gf.id) }}">
                                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                    <input type="hidden" name="mes" value="{{ mes_referencia }}">
                                     <button type="submit" class="btn-icon" title="{% if gf.ativo %}Desativar{% else %}Ativar{% endif %}"><i class="fa-solid {% if gf.ativo %}fa-toggle-on{% else %}fa-toggle-off{% endif %}"></i></button>
                                 </form>
-                                <form method="POST" action="{{ url_for('gastos_fixos.excluir_gasto_fixo', gasto_id=gf.id) }}">
+                                <form method="POST" action="{{ url_for('gastos_fixos.excluir_gasto_fixo', gasto_id=gf.id) }}" data-confirm-form>
                                     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                    <button type="submit" class="btn-icon" title="Excluir"><i class="fa-solid fa-trash"></i></button>
+                                    <input type="hidden" name="mes" value="{{ mes_referencia }}">
+                                    <button type="submit" class="btn-icon btn-icon-danger" data-confirm-message="Excluir este gasto fixo? O histórico já lançado no mês será preservado." title="Excluir"><i class="fa-solid fa-trash"></i></button>
                                 </form>
                             </div>
                         </div>
@@ -579,11 +615,12 @@
                             <p>{{ lancamentos_pendentes.mensagem }}</p>
                             <form method="POST" action="{{ url_for('gastos_fixos.lancar_gastos_fixos_mes') }}">
                                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                                <button type="submit" class="btn btn-lancar">Lançar gastos fixos do mês</button>
+                                <input type="hidden" name="mes" value="{{ mes_referencia }}">
+                                <button type="submit" class="btn btn-lancar">Lançar gastos fixos de {{ mes_referencia }}</button>
                             </form>
                         </div>
                         {% else %}
-                        <div class="lancamentos-ok"><p>Todos os gastos fixos do mês já foram lançados como transações.</p></div>
+                        <div class="lancamentos-ok"><p>Todos os gastos fixos de {{ mes_referencia }} já foram lançados como transações.</p></div>
                         {% endif %}
                     </div>
                     {% endif %}
@@ -604,6 +641,9 @@
                             <p>Fluxo financeiro e concentração de gastos por categoria.</p>
                         </div>
                         <span class="card-icon"><i class="fa-solid fa-chart-simple"></i></span>
+                    </div>
+                    <div class="insight-item insight-comparacao" id="resumo-relatorio">
+                        Entradas de R$ {{ "%.2f"|format(total_entradas or 0) }}, saídas de R$ {{ "%.2f"|format(total_saidas or 0) }} e saldo de R$ {{ "%.2f"|format(saldo or 0) }} no período selecionado.
                     </div>
                     <div class="graficos-grid-interno">
                         <div class="grafico-box">

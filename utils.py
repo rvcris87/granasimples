@@ -9,8 +9,10 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
-def redirecionar_dashboard(mensagem, categoria):
+def redirecionar_dashboard(mensagem, categoria, mes=None):
     flash(mensagem, categoria)
+    if mes:
+        return redirect(url_for("dashboard.app_dashboard", mes=mes))
     return redirect(url_for("dashboard.app_dashboard"))
 
 
@@ -155,8 +157,11 @@ def calcular_dados_dashboard(usuario_id, mes="", conn=None):
             t.categoria_id,
             c.nome AS categoria_nome
         FROM transacoes t
-        LEFT JOIN categorias c ON t.categoria_id = c.id
+        LEFT JOIN categorias c
+          ON t.categoria_id = c.id
+         AND c.usuario_id = t.usuario_id
         WHERE t.usuario_id = %s
+          AND t.meta_id IS NULL
         {filtro_mes}
         ORDER BY t.data DESC, t.id DESC
     """, params)
@@ -169,6 +174,7 @@ def calcular_dados_dashboard(usuario_id, mes="", conn=None):
             COALESCE(SUM(CASE WHEN tipo = 'saida' THEN valor ELSE 0 END), 0) AS total_saidas
         FROM transacoes t
         WHERE t.usuario_id = %s
+          AND t.meta_id IS NULL
         {filtro_mes}
     """, params)
     totais = cur.fetchone()
@@ -182,6 +188,7 @@ def calcular_dados_dashboard(usuario_id, mes="", conn=None):
         SELECT id, titulo, valor_meta, valor_atual
         FROM metas
         WHERE usuario_id = %s
+          AND COALESCE(ativo, TRUE) = TRUE
         ORDER BY id DESC
     """, (usuario_id,))
     metas = cur.fetchall()
@@ -197,6 +204,7 @@ def calcular_dados_dashboard(usuario_id, mes="", conn=None):
           ON t.categoria_id = c.id
          AND c.usuario_id = t.usuario_id
         WHERE t.usuario_id = %s
+          AND t.meta_id IS NULL
           AND t.tipo = 'saida'
           {filtro_mes}
         GROUP BY COALESCE(c.id::text, 'sem-categoria'), COALESCE(c.nome, 'Sem categoria')
@@ -234,6 +242,7 @@ def calcular_dados_dashboard(usuario_id, mes="", conn=None):
                 COALESCE(SUM(CASE WHEN tipo = 'saida' THEN valor ELSE 0 END), 0) AS saidas_anterior
             FROM transacoes t
             WHERE t.usuario_id = %s
+              AND t.meta_id IS NULL
               AND t.data >= %s
               AND t.data < %s
         """, (usuario_id, inicio_mes_anterior, fim_mes_anterior))
@@ -310,12 +319,12 @@ def calcular_dados_dashboard(usuario_id, mes="", conn=None):
     }
 
 
-def obter_inteligencia_financeira(usuario_id, conn=None):
+def obter_inteligencia_financeira(usuario_id, mes_referencia=None, conn=None):
     fechar_conn = conn is None
     conn = conn or conectar()
     cur = conn.cursor()
 
-    inicio_mes_atual = date.today().replace(day=1)
+    inicio_mes_atual = parse_mes(mes_referencia) if mes_referencia else date.today().replace(day=1)
     fim_mes_atual = adicionar_meses(inicio_mes_atual, 1)
     inicio_mes_anterior = adicionar_meses(inicio_mes_atual, -1)
     fim_mes_anterior = inicio_mes_atual
@@ -341,6 +350,7 @@ def obter_inteligencia_financeira(usuario_id, conn=None):
           ON t.categoria_id = c.id
          AND c.usuario_id = t.usuario_id
         WHERE t.usuario_id = %s
+          AND t.meta_id IS NULL
           AND t.tipo = 'saida'
           AND t.data >= %s
           AND t.data < %s
@@ -368,6 +378,7 @@ def obter_inteligencia_financeira(usuario_id, conn=None):
           ON t.categoria_id = c.id
          AND c.usuario_id = t.usuario_id
         WHERE t.usuario_id = %s
+          AND t.meta_id IS NULL
           AND t.tipo = 'saida'
           AND t.data >= %s
           AND t.data < %s
@@ -455,6 +466,102 @@ def buscar_categorias(usuario_id, tipo=None, incluir_sistema=False, conn=None):
     return categorias
 
 
+def buscar_uso_categorias(usuario_id, conn=None):
+    fechar_conn = conn is None
+    conn = conn or conectar()
+    cur = conn.cursor()
+
+    cur.execute("""
+        SELECT
+            c.id,
+            COALESCE(t.total_transacoes, 0) AS total_transacoes,
+            COALESCE(gf.total_gastos_fixos, 0) AS total_gastos_fixos
+        FROM categorias c
+        LEFT JOIN (
+            SELECT categoria_id, COUNT(*) AS total_transacoes
+            FROM transacoes
+            WHERE usuario_id = %s
+              AND categoria_id IS NOT NULL
+            GROUP BY categoria_id
+        ) t ON t.categoria_id = c.id
+        LEFT JOIN (
+            SELECT categoria_id, COUNT(*) AS total_gastos_fixos
+            FROM gastos_fixos
+            WHERE usuario_id = %s
+              AND categoria_id IS NOT NULL
+            GROUP BY categoria_id
+        ) gf ON gf.categoria_id = c.id
+        WHERE c.usuario_id = %s
+    """, (usuario_id, usuario_id, usuario_id))
+
+    dados = {}
+    for linha in cur.fetchall():
+        total_transacoes = int(linha["total_transacoes"] or 0)
+        total_gastos_fixos = int(linha["total_gastos_fixos"] or 0)
+        total_uso = total_transacoes + total_gastos_fixos
+        dados[int(linha["id"])] = {
+            "transacoes": total_transacoes,
+            "gastos_fixos": total_gastos_fixos,
+            "total": total_uso,
+            "em_uso": total_uso > 0
+        }
+
+    if fechar_conn:
+        conn.close()
+
+    return dados
+
+
+def buscar_movimentacoes_metas(usuario_id, limite_por_meta=5, conn=None):
+    fechar_conn = conn is None
+    conn = conn or conectar()
+    cur = conn.cursor()
+
+    try:
+        cur.execute("""
+            SELECT
+                mm.meta_id,
+                mm.tipo,
+                mm.valor,
+                mm.observacao,
+                mm.criado_em,
+                ROW_NUMBER() OVER (
+                    PARTITION BY mm.meta_id
+                    ORDER BY mm.criado_em DESC, mm.id DESC
+                ) AS ordem
+            FROM meta_movimentacoes mm
+            WHERE mm.usuario_id = %s
+        """, (usuario_id,))
+    except Exception as e:
+        logger.warning(
+            "Nao foi possivel carregar historico de metas para usuario %s. "
+            "A tabela meta_movimentacoes pode nao existir ainda. Erro: %s",
+            usuario_id,
+            e
+        )
+        if fechar_conn:
+            conn.close()
+        return {}
+
+    historico = {}
+    for linha in cur.fetchall():
+        ordem = int(linha["ordem"] or 0)
+        if ordem > limite_por_meta:
+            continue
+        meta_id = int(linha["meta_id"])
+        historico.setdefault(meta_id, []).append({
+            "tipo": linha["tipo"],
+            "valor": float(linha["valor"] or 0),
+            "observacao": linha["observacao"] or "",
+            "criado_em": linha["criado_em"]
+        })
+
+    if fechar_conn:
+        conn.close()
+
+    return historico
+
+
 # ===== NOVAS FUNCIONALIDADES =====
 
 def calcular_tendencia_6_meses(usuario_id, mes_referencia=None, conn=None):
@@ -479,6 +586,7 @@ def calcular_tendencia_6_meses(usuario_id, mes_referencia=None, conn=None):
             COALESCE(SUM(CASE WHEN tipo = 'saida' THEN valor ELSE 0 END), 0) AS total_saidas
         FROM transacoes
         WHERE usuario_id = %s
+          AND meta_id IS NULL
           AND data >= %s
           AND data < %s
         GROUP BY DATE_TRUNC('month', data)::date
@@ -515,7 +623,7 @@ def calcular_tendencia_6_meses(usuario_id, mes_referencia=None, conn=None):
     }
 
 
-def calcular_previsao_gastos(usuario_id, conn=None):
+def calcular_previsao_gastos(usuario_id, mes_referencia=None, conn=None):
     """
     Calcula previsão de gastos baseada em média móvel (últimos 3 meses)
     """
@@ -523,7 +631,8 @@ def calcular_previsao_gastos(usuario_id, conn=None):
     conn = conn or conectar()
     cur = conn.cursor()
 
-    meses = meses_reais(3, incluir_atual=False)
+    referencia = parse_mes(mes_referencia) if mes_referencia else date.today().replace(day=1)
+    meses = meses_reais(3, incluir_atual=False, referencia=referencia)
 
     gastos = []
 
@@ -534,6 +643,7 @@ def calcular_previsao_gastos(usuario_id, conn=None):
             SELECT COALESCE(SUM(valor), 0) AS total
             FROM transacoes
             WHERE usuario_id = %s
+              AND meta_id IS NULL
               AND tipo = 'saida'
               AND data >= %s
               AND data < %s
@@ -562,14 +672,12 @@ def calcular_previsao_gastos(usuario_id, conn=None):
 
 def calcular_alertas_metas(usuario_id, conn=None):
     """
-    Compara metas cadastradas com gastos reais do mês atual
-    Retorna alertas se ultrapassou ou está próximo de alcançar
+    Retorna alertas de progresso das metas ativas.
     """
     fechar_conn = conn is None
     conn = conn or conectar()
     cur = conn.cursor()
 
-    mes_atual = datetime.now().strftime("%Y-%m")
     alertas_metas = []
 
     # Buscar todas as metas
@@ -577,6 +685,7 @@ def calcular_alertas_metas(usuario_id, conn=None):
         SELECT id, titulo, valor_meta, valor_atual
         FROM metas
         WHERE usuario_id = %s
+          AND COALESCE(ativo, TRUE) = TRUE
     """, (usuario_id,))
     metas = cur.fetchall()
 
@@ -611,14 +720,14 @@ def calcular_alertas_metas(usuario_id, conn=None):
     return alertas_metas
 
 
-def buscar_gastos_fixos(usuario_id, conn=None):
+def buscar_gastos_fixos(usuario_id, mes_referencia=None, conn=None):
     """
     Busca todos os gastos fixos do usuário ordenados por dia de vencimento
     """
     fechar_conn = conn is None
     conn = conn or conectar()
     cur = conn.cursor()
-    mes_atual = date.today().strftime("%Y-%m")
+    mes_consulta = parse_mes(mes_referencia).strftime("%Y-%m") if mes_referencia else date.today().strftime("%Y-%m")
 
     cur.execute("""
         SELECT
@@ -637,10 +746,12 @@ def buscar_gastos_fixos(usuario_id, conn=None):
                   AND t.referencia_mes = %s
             ) AS lancado_mes
         FROM gastos_fixos gf
-        LEFT JOIN categorias c ON gf.categoria_id = c.id
+        LEFT JOIN categorias c
+          ON gf.categoria_id = c.id
+         AND c.usuario_id = gf.usuario_id
         WHERE gf.usuario_id = %s
         ORDER BY gf.dia_vencimento ASC
-    """, (mes_atual, usuario_id))
+    """, (mes_consulta, usuario_id))
 
     gastos_fixos = cur.fetchall()
     if fechar_conn:
@@ -688,7 +799,9 @@ def calcular_insights_gastos_fixos(usuario_id, total_saidas, conn=None):
             COALESCE(c.nome, 'Sem categoria') AS categoria_nome,
             COALESCE(SUM(gf.valor), 0) AS total
         FROM gastos_fixos gf
-        LEFT JOIN categorias c ON gf.categoria_id = c.id
+        LEFT JOIN categorias c
+          ON gf.categoria_id = c.id
+         AND c.usuario_id = gf.usuario_id
         WHERE gf.usuario_id = %s AND gf.ativo = TRUE
         GROUP BY c.id, c.nome
         ORDER BY total DESC
@@ -734,9 +847,9 @@ def calcular_insights_gastos_fixos(usuario_id, total_saidas, conn=None):
     }
 
 
-def verificar_lancamentos_pendentes(usuario_id, conn=None):
+def verificar_lancamentos_pendentes(usuario_id, mes_referencia=None, conn=None):
     """
-    Verifica se existem gastos fixos não lançados no mês atual.
+    Verifica se existem gastos fixos não lançados no mês consultado.
     Retorna: {
         possui_pendentes: bool,
         quantidade: int,
@@ -747,7 +860,7 @@ def verificar_lancamentos_pendentes(usuario_id, conn=None):
     conn = conn or conectar()
     cur = conn.cursor()
     
-    mes_atual = date.today().strftime("%Y-%m")
+    mes_consulta = parse_mes(mes_referencia).strftime("%Y-%m") if mes_referencia else date.today().strftime("%Y-%m")
     
     # Buscar gastos fixos ativos não lançados no mês
     cur.execute("""
@@ -761,7 +874,7 @@ def verificar_lancamentos_pendentes(usuario_id, conn=None):
                 AND t.gasto_fixo_id = gf.id
                 AND t.referencia_mes = %s
           )
-    """, (usuario_id, mes_atual))
+    """, (usuario_id, mes_consulta))
     
     resultado = cur.fetchone()
     quantidade = int(resultado["quantidade"] or 0)
@@ -770,7 +883,7 @@ def verificar_lancamentos_pendentes(usuario_id, conn=None):
         conn.close()
     
     possui_pendentes = quantidade > 0
-    mensagem = f"Você tem {quantidade} gasto(s) fixo(s) não lançado(s) neste mês" if possui_pendentes else ""
+    mensagem = f"Você tem {quantidade} gasto(s) fixo(s) não lançado(s) no mês selecionado" if possui_pendentes else ""
     
     return {
         "possui_pendentes": possui_pendentes,

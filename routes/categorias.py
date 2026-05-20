@@ -100,13 +100,35 @@ def editar_categoria(categoria_id):
         cur = conn.cursor()
 
         cur.execute("""
-            SELECT id
+            SELECT id, tipo
             FROM categorias
             WHERE id = %s AND usuario_id = %s
         """, (categoria_id, usuario_id))
+        categoria_atual = cur.fetchone()
 
-        if not cur.fetchone():
+        if not categoria_atual:
             return redirecionar_dashboard("Categoria não encontrada.", "erro")
+
+        if categoria_atual["tipo"] != tipo:
+            cur.execute("""
+                SELECT COUNT(*) AS total
+                FROM transacoes
+                WHERE categoria_id = %s AND usuario_id = %s
+            """, (categoria_id, usuario_id))
+            transacoes = int(cur.fetchone()["total"] or 0)
+
+            cur.execute("""
+                SELECT COUNT(*) AS total
+                FROM gastos_fixos
+                WHERE categoria_id = %s AND usuario_id = %s
+            """, (categoria_id, usuario_id))
+            gastos_fixos = int(cur.fetchone()["total"] or 0)
+
+            if transacoes or gastos_fixos:
+                return redirecionar_dashboard(
+                    "Não é possível mudar o tipo de uma categoria que já está em uso. Crie uma nova categoria para preservar o histórico.",
+                    "erro"
+                )
 
         if categoria_duplicada(cur, usuario_id, nome, tipo, categoria_id):
             return redirecionar_dashboard("Essa categoria já existe.", "erro")

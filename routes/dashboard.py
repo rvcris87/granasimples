@@ -14,6 +14,8 @@ from utils import (
     calcular_insights_gastos_fixos,
     verificar_lancamentos_pendentes,
     obter_inteligencia_financeira,
+    buscar_uso_categorias,
+    buscar_movimentacoes_metas,
     parse_mes
 )
 from db import conectar, DatabaseConfigError
@@ -50,12 +52,32 @@ def app_dashboard():
         dados = calcular_dados_dashboard(usuario_id, mes, conn=conn)
         categorias = buscar_categorias(usuario_id, conn=conn) or []
         tendencia = calcular_tendencia_6_meses(usuario_id, mes_referencia=mes, conn=conn) or {"labels": [], "entradas": [], "saidas": [], "saldo": []}
-        previsao = calcular_previsao_gastos(usuario_id, conn=conn) or {"valor": 0, "mensagem": ""}
+        previsao = calcular_previsao_gastos(usuario_id, mes_referencia=mes, conn=conn) or {"valor": 0, "mensagem": ""}
         alertas_metas = calcular_alertas_metas(usuario_id, conn=conn) or []
-        gastos_fixos = buscar_gastos_fixos(usuario_id, conn=conn) or []
+        gastos_fixos = buscar_gastos_fixos(usuario_id, mes_referencia=mes, conn=conn) or []
         insights_gastos_fixos = calcular_insights_gastos_fixos(usuario_id, dados["total_saidas"], conn=conn)
-        lancamentos_pendentes = verificar_lancamentos_pendentes(usuario_id, conn=conn) or {"possui_pendentes": False, "quantidade": 0, "mensagem": ""}
-        inteligencia = obter_inteligencia_financeira(usuario_id, conn=conn)
+        lancamentos_pendentes = verificar_lancamentos_pendentes(usuario_id, mes_referencia=mes, conn=conn) or {"possui_pendentes": False, "quantidade": 0, "mensagem": ""}
+        inteligencia = obter_inteligencia_financeira(usuario_id, mes_referencia=mes, conn=conn)
+
+        try:
+            uso_categorias = buscar_uso_categorias(usuario_id, conn=conn)
+        except Exception as e:
+            logger.warning(
+                "Falha ao carregar uso de categorias para usuario %s: %s",
+                usuario_id,
+                e
+            )
+            uso_categorias = {}
+
+        try:
+            movimentacoes_metas = buscar_movimentacoes_metas(usuario_id, conn=conn)
+        except Exception as e:
+            logger.warning(
+                "Falha ao carregar movimentacoes de metas para usuario %s: %s",
+                usuario_id,
+                e
+            )
+            movimentacoes_metas = {}
 
     except (OperationalError, DatabaseConfigError) as e:
         logger.exception(f"Erro de conexão com o banco ao carregar dashboard para usuário {usuario_id}: {e}")
@@ -112,7 +134,10 @@ def app_dashboard():
         alertas_gastos_fixos=insights_gastos_fixos.get("alertas_gastos_fixos", []),
         lancamentos_pendentes=lancamentos_pendentes,
         inteligencia=inteligencia,
+        uso_categorias=uso_categorias,
+        movimentacoes_metas=movimentacoes_metas,
         mes=mes,
+        mes_referencia=mes or date.today().strftime("%Y-%m"),
         data_hoje=date.today().isoformat()
     )
 

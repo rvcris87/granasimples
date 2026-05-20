@@ -56,14 +56,13 @@ ALTER TABLE transacoes ALTER COLUMN data SET NOT NULL;
 
 -- Metas table
 ALTER TABLE metas ALTER COLUMN usuario_id SET NOT NULL;
-ALTER TABLE metas ALTER COLUMN nome SET NOT NULL;
+ALTER TABLE metas ALTER COLUMN titulo SET NOT NULL;
 ALTER TABLE metas ALTER COLUMN valor_meta SET NOT NULL;
 
 -- Gastos Fixos table
 ALTER TABLE gastos_fixos ALTER COLUMN usuario_id SET NOT NULL;
 ALTER TABLE gastos_fixos ALTER COLUMN descricao SET NOT NULL;
 ALTER TABLE gastos_fixos ALTER COLUMN valor SET NOT NULL;
-ALTER TABLE gastos_fixos ALTER COLUMN categoria_id SET NOT NULL;
 ALTER TABLE gastos_fixos ALTER COLUMN dia_vencimento SET NOT NULL;
 
 -- Login Tentativas table

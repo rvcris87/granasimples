@@ -410,6 +410,18 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
+    function inicializarConfirmacoes() {
+        document.querySelectorAll("[data-confirm-form]").forEach((form) => {
+            form.addEventListener("submit", (event) => {
+                const botao = form.querySelector("[data-confirm-message]");
+                const mensagem = botao?.dataset.confirmMessage || "Confirmar exclusão?";
+                if (!window.confirm(mensagem)) {
+                    event.preventDefault();
+                }
+            });
+        });
+    }
+
     function recriarGraficos() {
         chartInstances.splice(0).forEach((chart) => chart.destroy());
         document.querySelectorAll(".grafico-aviso").forEach((aviso) => aviso.remove());
@@ -427,6 +439,7 @@ document.addEventListener("DOMContentLoaded", () => {
     inicializarFiltrosDeTransacoes();
     inicializarAnimacoes();
     inicializarToasts();
+    inicializarConfirmacoes();
 
     window.addEventListener("grana-theme-change", recriarGraficos);
 });
