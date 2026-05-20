@@ -32,7 +32,9 @@ def app_dashboard():
     usuario_id = session["usuario_id"]
     mes = request.args.get("mes", "").strip()
 
-    if mes:
+    if not mes:
+        mes = date.today().strftime("%Y-%m")
+    if True:
         try:
             parse_mes(mes)
         except ValueError:
