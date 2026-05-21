@@ -1,5 +1,6 @@
 from flask import Blueprint, request, redirect, url_for, session, flash
 import logging
+import psycopg2
 from decorators import login_required
 from db import conectar
 from datetime import date
@@ -84,6 +85,10 @@ def add_gasto_fixo():
         conn.commit()
         return redirecionar_dashboard("Gasto fixo adicionado com sucesso.", "sucesso", mes_dashboard)
 
+    except psycopg2.errors.UniqueViolation:
+        if conn:
+            conn.rollback()
+        return redirecionar_dashboard("Esse gasto fixo já existe.", "erro", mes_dashboard)
     except Exception as e:
         if conn:
             conn.rollback()
