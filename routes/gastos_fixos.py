@@ -50,6 +50,20 @@ def add_gasto_fixo():
         conn = conectar()
         cur = conn.cursor()
 
+        cur.execute("""
+            SELECT id
+            FROM gastos_fixos
+            WHERE usuario_id = %s
+              AND LOWER(TRIM(descricao)) = LOWER(TRIM(%s))
+              AND valor = %s
+              AND dia_vencimento = %s
+              AND ativo = TRUE
+            LIMIT 1
+        """, (usuario_id, descricao, valor, dia_vencimento))
+        
+        if cur.fetchone():
+            return redirecionar_dashboard("Esse gasto fixo já existe.", "erro", mes_dashboard)
+
         if categoria_id:
             cur.execute("""
                 SELECT id, tipo
