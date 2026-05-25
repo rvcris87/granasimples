@@ -657,15 +657,33 @@ def calcular_previsao_gastos(usuario_id, mes_referencia=None, conn=None):
         conn.close()
 
     # Calcular média
+    hoje_atual = date.today().replace(day=1)
     if gastos and sum(gastos) > 0:
         media_previsao = sum(gastos) / len(gastos)
-        mensagem = f"Com base nos últimos 3 meses, sua previsão de gastos para o próximo mês é R$ {media_previsao:.2f}"
+        if referencia == hoje_atual:
+            label = "Previsão de gastos"
+            mensagem = f"Com base nos últimos 3 meses, sua previsão para o próximo período é R$ {media_previsao:.2f}."
+        elif referencia < hoje_atual:
+            label = "Estimativa para este período"
+            mensagem = f"Com base nos 3 meses anteriores, o gasto esperado para este mês era R$ {media_previsao:.2f}."
+        else:
+            label = "Estimativa para o período selecionado"
+            mensagem = f"Com base nos 3 meses anteriores ao selecionado, a estimativa para o período selecionado é R$ {media_previsao:.2f}."
     else:
         media_previsao = 0
-        mensagem = "Dados insuficientes para gerar previsão de gastos."
+        if referencia == hoje_atual:
+            label = "Previsão de gastos"
+            mensagem = "Dados insuficientes para gerar previsão de gastos."
+        elif referencia < hoje_atual:
+            label = "Estimativa para este período"
+            mensagem = "Dados insuficientes para gerar a estimativa de gastos esperada."
+        else:
+            label = "Estimativa para o período selecionado"
+            mensagem = "Dados insuficientes para gerar a estimativa para o período selecionado."
 
     return {
         "valor": media_previsao,
+        "label": label,
         "mensagem": mensagem
     }
 
@@ -890,3 +908,78 @@ def verificar_lancamentos_pendentes(usuario_id, mes_referencia=None, conn=None):
         "quantidade": quantidade,
         "mensagem": mensagem
     }
+
+
+def calcular_saldo_global(usuario_id, conn=None):
+    """
+    Calcula saldo acumulado historico, excluindo transacoes vinculadas a metas
+    para evitar dupla contagem com meta_movimentacoes.
+
+    Formula:
+        saldo_global = total_entradas_reais - total_saidas_reais
+        (meta_id IS NULL em ambos os lados)
+    """
+    fechar_conn = conn is None
+    conn = conn or conectar()
+    cur = conn.cursor()
+
+    cur.execute("""
+        SELECT
+            COALESCE(SUM(CASE WHEN tipo = 'entrada' THEN valor ELSE 0 END), 0) AS total_entradas_global,
+            COALESCE(SUM(CASE WHEN tipo = 'saida'   THEN valor ELSE 0 END), 0) AS total_saidas_global
+        FROM transacoes
+        WHERE usuario_id = %s
+          AND meta_id IS NULL
+    """, (usuario_id,))
+
+    resultado = cur.fetchone()
+
+    if fechar_conn:
+        conn.close()
+
+    total_entradas_global = float(resultado["total_entradas_global"] or 0)
+    total_saidas_global   = float(resultado["total_saidas_global"]   or 0)
+    saldo_global          = total_entradas_global - total_saidas_global
+
+    return {
+        "total_entradas_global": total_entradas_global,
+        "total_saidas_global":   total_saidas_global,
+        "saldo_global":          saldo_global,
+    }
+
+
+def buscar_transacoes_recentes(usuario_id, limite=20, conn=None):
+    """
+    Retorna as ultimas N transacoes do usuario sem filtro de mes,
+    excluindo movimentacoes vinculadas a metas.
+    Usado quando nenhum mes esta selecionado.
+    """
+    fechar_conn = conn is None
+    conn = conn or conectar()
+    cur = conn.cursor()
+
+    cur.execute("""
+        SELECT
+            t.id,
+            t.descricao,
+            t.valor,
+            t.tipo,
+            t.data,
+            t.categoria_id,
+            c.nome AS categoria_nome
+        FROM transacoes t
+        LEFT JOIN categorias c
+          ON t.categoria_id = c.id
+         AND c.usuario_id = t.usuario_id
+        WHERE t.usuario_id = %s
+          AND t.meta_id IS NULL
+        ORDER BY t.data DESC, t.id DESC
+        LIMIT %s
+    """, (usuario_id, limite))
+
+    transacoes = cur.fetchall()
+
+    if fechar_conn:
+        conn.close()
+
+    return transacoes

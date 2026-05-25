@@ -85,7 +85,6 @@
                 {% set uso_categorias_safe = uso_categorias | default({}, true) %}
                 {% set movimentacoes_metas_safe = movimentacoes_metas | default({}, true) %}
                 {% set reservado_metas = (metas | sum(attribute='valor_atual') | float) if metas else 0.0 %}
-                {% set saldo_disponivel = (saldo or 0) - (reservado_metas or 0) %}
                 <div class="section-heading">
                     <div>
                         <p class="section-eyebrow">Visão geral</p>
@@ -96,13 +95,13 @@
 
                 <section class="resumo-cards" aria-label="Resumo financeiro">
                     <article class="finance-card saldo-card destaque-card">
-                        <span>Saldo disponível</span>
+                        <span>Saldo disponível atual</span>
                         <strong class="{% if saldo_disponivel < 0 %}saida{% endif %}">R$ {{ "%.2f"|format(saldo_disponivel or 0) }}</strong>
-                        
+
                         <div class="saldo-calculo">
                             <div class="saldo-calculo-linha">
-                                <div class="saldo-calculo-label">Saldo do mês:</div>
-                                <div class="saldo-calculo-valor">R$ {{ "%.2f"|format(saldo or 0) }}</div>
+                                <div class="saldo-calculo-label">Acumulado histórico:</div>
+                                <div class="saldo-calculo-valor">R$ {{ "%.2f"|format(saldo_global or 0) }}</div>
                             </div>
                             <div class="saldo-calculo-linha">
                                 <div class="saldo-calculo-label is-muted">Reservado em metas:</div>
@@ -112,11 +111,16 @@
 
                         {% if saldo_disponivel < 0 %}
                         <small class="saldo-alerta-negativo">
-                            ⚠️ Seu saldo disponível ficou negativo porque o valor reservado em metas é maior que o saldo do mês.
+                            ⚠️ Saldo negativo: o total reservado em metas supera o acumulado histórico.
                         </small>
                         {% else %}
-                        <small>Saldo do período menos reservas guardadas em metas</small>
+                        <small>Considera todo o histórico menos reservas em metas.</small>
                         {% endif %}
+                    </article>
+                    <article class="finance-card meta-card">
+                        <span>Resultado do mês</span>
+                        <strong class="{% if resultado_mes < 0 %}saida{% endif %}">R$ {{ "%.2f"|format(resultado_mes or 0) }}</strong>
+                        <small>Entradas menos saídas em {{ mes or "mês atual" }}</small>
                     </article>
                     <article class="finance-card entrada-card">
                         <span>Entradas</span>
@@ -126,12 +130,17 @@
                     <article class="finance-card saida-card">
                         <span>Saídas</span>
                         <strong>R$ {{ "%.2f"|format(total_saidas or 0) }}</strong>
-                        <small>Despesas e reservas lançadas</small>
+                        <small>Despesas lançadas no período</small>
                     </article>
                     <article class="finance-card meta-card">
                         <span>Gastos fixos</span>
                         <strong>R$ {{ "%.2f"|format(total_gastos_fixos or 0) }}</strong>
                         <small>{{ "%.1f"|format(percentual_gastos_fixos or 0) }}% das saídas do mês</small>
+                    </article>
+                    <article class="finance-card meta-card">
+                        <span>Reservado em metas</span>
+                        <strong>R$ {{ "%.2f"|format(reservado_metas or 0) }}</strong>
+                        <small>Total guardado nas metas ativas</small>
                     </article>
                 </section>
                 <section class="insights-curtos" aria-label="Resumo rápido do mês">
@@ -140,8 +149,8 @@
                     </article>
                     <article class="insight-item">
                         <strong>Leitura:</strong>
-                        {% if saldo_disponivel < 0 %}
-                        Você já consumiu mais do que o disponível para o mês.
+                        {% if resultado_mes < 0 %}
+                        Você gastou mais do que recebeu no período selecionado.
                         {% elif total_entradas > 0 %}
                         Suas saídas representam {{ "%.1f"|format(((total_saidas or 0) / (total_entradas or 1)) * 100) }}% das entradas.
                         {% else %}
@@ -169,12 +178,12 @@
                         <div class="painel-card-header">
                             <div>
                                 <h2>Últimas transações</h2>
-                                <p>Atalhos do que acabou de acontecer.</p>
+                                <p>As 5 movimentações mais recentes, independente do mês filtrado.</p>
                             </div>
                         </div>
-                        {% if transacoes %}
+                        {% if transacoes_recentes %}
                         <div class="compact-list">
-                            {% for t in transacoes[:5] %}
+                            {% for t in transacoes_recentes[:5] %}
                             <div class="compact-row">
                                 <div>
                                     <strong>{{ t.descricao or "Sem descrição" }}</strong>
@@ -685,7 +694,7 @@
                     <div class="insights-container">
                         {% if mes and mensagem_comparacao %}<div class="insight-item insight-comparacao">{{ mensagem_comparacao }}</div>{% endif %}
                         {% if maior_categoria %}<div class="insight-item insight-categoria">Maior gasto: <strong>{{ maior_categoria }}</strong> (R$ {{ "%.2f"|format(maior_valor) }})</div>{% endif %}
-                        {% if previsao_mensagem %}<div class="insight-item insight-previsao">{{ previsao_mensagem }}</div>{% endif %}
+                        {% if previsao_mensagem %}<div class="insight-item insight-previsao"><strong>{{ previsao_label }}:</strong> {{ previsao_mensagem }}</div>{% endif %}
                         {% if alertas %}<div class="alertas-box">{% for alerta in alertas %}<div class="insight-item insight-alerta">{{ alerta }}</div>{% endfor %}</div>{% endif %}
                         {% if alertas_metas %}<div class="alertas-metas">{% for alerta_meta in alertas_metas %}<div class="insight-item {% if alerta_meta.tipo == 'erro' %}insight-alerta{% else %}insight-aviso{% endif %}">{{ alerta_meta.mensagem }}</div>{% endfor %}</div>{% endif %}
                         {% if insights %}<div class="insights-classicos">{% for insight in insights %}<p>{{ insight }}</p>{% endfor %}</div>{% endif %}

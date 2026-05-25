@@ -5,7 +5,7 @@ from flask import Blueprint, render_template, request, session, abort
 from psycopg2 import OperationalError
 from decorators import login_required
 from utils import (
-    calcular_dados_dashboard, 
+    calcular_dados_dashboard,
     buscar_categorias,
     calcular_tendencia_6_meses,
     calcular_previsao_gastos,
@@ -16,6 +16,8 @@ from utils import (
     obter_inteligencia_financeira,
     buscar_uso_categorias,
     buscar_movimentacoes_metas,
+    calcular_saldo_global,
+    buscar_transacoes_recentes,
     parse_mes
 )
 from db import conectar, DatabaseConfigError
@@ -54,12 +56,14 @@ def app_dashboard():
         dados = calcular_dados_dashboard(usuario_id, mes, conn=conn)
         categorias = buscar_categorias(usuario_id, conn=conn) or []
         tendencia = calcular_tendencia_6_meses(usuario_id, mes_referencia=mes, conn=conn) or {"labels": [], "entradas": [], "saidas": [], "saldo": []}
-        previsao = calcular_previsao_gastos(usuario_id, mes_referencia=mes, conn=conn) or {"valor": 0, "mensagem": ""}
+        previsao = calcular_previsao_gastos(usuario_id, mes_referencia=mes, conn=conn) or {"valor": 0, "label": "", "mensagem": ""}
         alertas_metas = calcular_alertas_metas(usuario_id, conn=conn) or []
         gastos_fixos = buscar_gastos_fixos(usuario_id, mes_referencia=mes, conn=conn) or []
         insights_gastos_fixos = calcular_insights_gastos_fixos(usuario_id, dados["total_saidas"], conn=conn)
         lancamentos_pendentes = verificar_lancamentos_pendentes(usuario_id, mes_referencia=mes, conn=conn) or {"possui_pendentes": False, "quantidade": 0, "mensagem": ""}
         inteligencia = obter_inteligencia_financeira(usuario_id, mes_referencia=mes, conn=conn)
+        dados_globais = calcular_saldo_global(usuario_id, conn=conn)
+        transacoes_recentes = buscar_transacoes_recentes(usuario_id, limite=20, conn=conn)
 
         try:
             uso_categorias = buscar_uso_categorias(usuario_id, conn=conn)
@@ -105,10 +109,14 @@ def app_dashboard():
         "index.html",
         nome=session.get("usuario_nome", "Usuário"),
         transacoes=dados.get("transacoes", []),
+        transacoes_recentes=transacoes_recentes,
         metas=dados.get("metas", []),
         total_entradas=float(dados.get("total_entradas", 0) or 0),
         total_saidas=float(dados.get("total_saidas", 0) or 0),
+        resultado_mes=float(dados.get("saldo", 0) or 0),
         saldo=float(dados.get("saldo", 0) or 0),
+        saldo_global=float(dados_globais.get("saldo_global", 0) or 0),
+        saldo_disponivel=float(dados_globais.get("saldo_global", 0) or 0) - float(sum(m["valor_atual"] or 0 for m in dados.get("metas", []))),
         categorias_labels=dados.get("categorias_labels", []),
         categorias_valores=dados.get("categorias_valores", []),
         categorias=categorias,
@@ -127,6 +135,7 @@ def app_dashboard():
         evolucao_saidas=tendencia.get("saidas", []),
         evolucao_saldo=tendencia.get("saldo", []),
         previsao_valor=float(previsao.get("valor", 0) or 0),
+        previsao_label=previsao.get("label", ""),
         previsao_mensagem=previsao.get("mensagem", ""),
         alertas_metas=alertas_metas,
         gastos_fixos=gastos_fixos,
