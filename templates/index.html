@@ -97,8 +97,26 @@
                 <section class="resumo-cards" aria-label="Resumo financeiro">
                     <article class="finance-card saldo-card destaque-card">
                         <span>Saldo disponível</span>
-                        <strong>R$ {{ "%.2f"|format(saldo_disponivel or 0) }}</strong>
-                        <small>Saldo atual menos reservas já guardadas em metas</small>
+                        <strong class="{% if saldo_disponivel < 0 %}saida{% endif %}">R$ {{ "%.2f"|format(saldo_disponivel or 0) }}</strong>
+                        
+                        <div class="saldo-calculo">
+                            <div class="saldo-calculo-linha">
+                                <div class="saldo-calculo-label">Saldo do mês:</div>
+                                <div class="saldo-calculo-valor">R$ {{ "%.2f"|format(saldo or 0) }}</div>
+                            </div>
+                            <div class="saldo-calculo-linha">
+                                <div class="saldo-calculo-label is-muted">Reservado em metas:</div>
+                                <div class="saldo-calculo-valor is-muted">- R$ {{ "%.2f"|format(reservado_metas or 0) }}</div>
+                            </div>
+                        </div>
+
+                        {% if saldo_disponivel < 0 %}
+                        <small class="saldo-alerta-negativo">
+                            ⚠️ Seu saldo disponível ficou negativo porque o valor reservado em metas é maior que o saldo do mês.
+                        </small>
+                        {% else %}
+                        <small>Saldo do período menos reservas guardadas em metas</small>
+                        {% endif %}
                     </article>
                     <article class="finance-card entrada-card">
                         <span>Entradas</span>

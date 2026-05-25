@@ -1158,6 +1158,47 @@ select:focus {
     background: rgba(124, 58, 237, 0.11);
 }
 
+/* Detalhes do cálculo do Saldo Disponível */
+.saldo-calculo {
+    margin-top: 12px;
+    font-size: 0.85rem;
+    border-top: 1px solid var(--border);
+    padding-top: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.saldo-calculo-linha {
+    display: flex;
+    justify-content: space-between;
+}
+
+.saldo-calculo-label {
+    color: var(--text);
+}
+
+.saldo-calculo-label.is-muted {
+    color: var(--muted);
+}
+
+.saldo-calculo-valor {
+    font-weight: bold;
+    color: var(--text);
+}
+
+.saldo-calculo-valor.is-muted {
+    color: var(--muted);
+}
+
+.saldo-alerta-negativo {
+    color: var(--red);
+    font-weight: bold;
+    margin-top: 10px;
+    display: block;
+    line-height: 1.2;
+}
+
 .entrada,
 .valor-entrada {
     color: var(--green-strong);
