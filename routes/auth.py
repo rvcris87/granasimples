@@ -59,8 +59,7 @@ def login():
                 session["usuario_id"] = usuario["id"]
                 session["usuario_nome"] = usuario["nome"]
 
-                # Redirecionar para 'next' se fornecido e seguro, caso contrário para dashboard
-                next_url = request.args.get('next') or request.form.get('next')
+                next_url = request.args.get("next") or request.form.get("next")
                 if next_url and is_safe_url(next_url):
                     return redirect(next_url)
                 return redirect(url_for("dashboard.app_dashboard"))
@@ -109,6 +108,10 @@ def register():
             erro = "As senhas não conferem."
             return render_template("register.html", erro=erro, nome=nome, email=email)
 
+        if not request.form.get("aceitar_termos"):
+            erro = "Você precisa aceitar os Termos de Uso e a Política de Privacidade para criar uma conta."
+            return render_template("register.html", erro=erro, nome=nome, email=email)
+
         conn = None
         try:
             conn = conectar()
@@ -128,8 +131,8 @@ def register():
             senha_hash = generate_password_hash(senha)
 
             cur.execute("""
-                INSERT INTO usuarios (nome, email, senha)
-                VALUES (%s, %s, %s)
+                INSERT INTO usuarios (nome, email, senha, consentimento_termos_em)
+                VALUES (%s, %s, %s, NOW())
             """, (nome, email, senha_hash))
 
             conn.commit()

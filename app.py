@@ -12,6 +12,7 @@ from routes import (
     metas_bp,
     categorias_bp,
     gastos_fixos_bp,
+    legal_bp,
 )
 
 base_dir = Path(__file__).resolve().parent
@@ -46,6 +47,7 @@ app.register_blueprint(transacoes_bp)
 app.register_blueprint(metas_bp)
 app.register_blueprint(categorias_bp)
 app.register_blueprint(gastos_fixos_bp)
+app.register_blueprint(legal_bp)
 
 
 @app.route("/")

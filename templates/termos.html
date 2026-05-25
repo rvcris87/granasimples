@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Termos de Uso - GranaSimples</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script src="{{ url_for('static', filename='js/theme.js') }}"></script>
+    <style>
+        .legal-container {
+            max-width: 760px;
+            margin: 0 auto;
+            padding: 2.5rem 1.5rem 4rem;
+        }
+        .legal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 2.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--border, #e2e8f0);
+        }
+        .legal-back {
+            font-size: 0.875rem;
+            color: var(--muted, #64748b);
+            text-decoration: none;
+        }
+        .legal-back:hover { text-decoration: underline; }
+        .legal-container h1 {
+            font-size: 1.75rem;
+            font-weight: 700;
+            margin-bottom: 0.25rem;
+        }
+        .legal-container h2 {
+            font-size: 1.125rem;
+            font-weight: 600;
+            margin: 2rem 0 0.5rem;
+        }
+        .legal-container p, .legal-container li {
+            font-size: 0.9375rem;
+            line-height: 1.75;
+            color: var(--text, #0f172a);
+        }
+        .legal-container ul {
+            padding-left: 1.25rem;
+            margin: 0.5rem 0 1rem;
+        }
+        .legal-meta {
+            font-size: 0.8125rem;
+            color: var(--muted, #64748b);
+            margin-bottom: 2rem;
+        }
+        .legal-aviso {
+            background: var(--surface, #f1f5f9);
+            border-left: 4px solid var(--petrol, #0e7490);
+            padding: 0.875rem 1rem;
+            border-radius: 0 6px 6px 0;
+            margin: 1.5rem 0;
+            font-size: 0.875rem;
+        }
+    </style>
+</head>
+<body>
+
+<div class="legal-container">
+    <div class="legal-header">
+        <a href="{{ url_for('home') }}" class="brand-lockup">
+            <span class="brand-mark">G</span>
+            <span>GranaSimples</span>
+        </a>
+        <div style="display:flex;align-items:center;gap:1rem;">
+            <a href="/" class="legal-back">← Voltar</a>
+            <button class="theme-toggle" type="button" data-theme-toggle aria-label="Alternar tema">
+                <span class="theme-icon-moon">☾</span>
+                <span class="theme-icon-sun">☀</span>
+            </button>
+        </div>
+    </div>
+
+    <h1>Termos de Uso</h1>
+    <p class="legal-meta">Última atualização: maio de 2026</p>
+
+    <div class="legal-aviso">
+        Ao criar uma conta no GranaSimples, você concorda com estes termos. Leia com atenção antes de se cadastrar.
+    </div>
+
+    <h2>1. O que é o GranaSimples</h2>
+    <p>O GranaSimples é uma ferramenta de controle financeiro pessoal que permite registrar transações, categorias, metas e gastos fixos. O serviço é oferecido como está, para uso pessoal e não comercial.</p>
+
+    <h2>2. Elegibilidade</h2>
+    <p>Você pode usar o GranaSimples se:</p>
+    <ul>
+        <li>Tiver 18 anos ou mais, ou tiver consentimento de um responsável legal.</li>
+        <li>Fornecer informações verdadeiras no cadastro.</li>
+        <li>Usar o serviço apenas para fins pessoais e lícitos.</li>
+    </ul>
+
+    <h2>3. Conta e responsabilidade</h2>
+    <p>Você é responsável por:</p>
+    <ul>
+        <li>Manter a confidencialidade da sua senha.</li>
+        <li>Toda atividade realizada na sua conta.</li>
+        <li>Notificar imediatamente qualquer uso não autorizado da sua conta pelo e-mail <strong>[INSERIR E-MAIL DE CONTATO]</strong>.</li>
+    </ul>
+
+    <h2>4. Uso aceitável</h2>
+    <p>É proibido usar o GranaSimples para:</p>
+    <ul>
+        <li>Registrar dados financeiros de terceiros sem autorização.</li>
+        <li>Tentar acessar contas de outros usuários.</li>
+        <li>Realizar ataques, engenharia reversa ou exploração de vulnerabilidades.</li>
+        <li>Qualquer finalidade ilegal sob a legislação brasileira.</li>
+    </ul>
+
+    <h2>5. Seus dados</h2>
+    <p>Todos os dados financeiros que você inserir pertencem a você. O GranaSimples não reivindica propriedade sobre esses dados. Consulte nossa <a href="{{ url_for('legal.privacidade') }}">Política de Privacidade</a> para entender como tratamos seus dados.</p>
+
+    <h2>6. Disponibilidade do serviço</h2>
+    <p>O GranaSimples é oferecido sem garantia de disponibilidade ininterrupta. Podemos realizar manutenções, atualizações ou correções que resultem em indisponibilidade temporária. Faremos esforços razoáveis para minimizar interrupções.</p>
+
+    <h2>7. Limitação de responsabilidade</h2>
+    <p>O GranaSimples é uma ferramenta de organização pessoal e <strong>não constitui assessoria financeira, contábil ou jurídica</strong>. As informações exibidas são baseadas nos dados que você inseriu e não devem ser usadas como base única para decisões financeiras importantes.</p>
+    <p>Não nos responsabilizamos por perdas financeiras decorrentes do uso ou da indisponibilidade do serviço.</p>
+
+    <h2>8. Encerramento de conta</h2>
+    <p>Você pode solicitar o encerramento da sua conta a qualquer momento pelo e-mail <strong>[INSERIR E-MAIL DE CONTATO]</strong>. A solicitação será processada manualmente em até 15 dias úteis, com exclusão ou anonimização dos seus dados.</p>
+    <p>Reservamo-nos o direito de suspender contas que violem estes termos.</p>
+
+    <h2>9. Alterações nos termos</h2>
+    <p>Podemos atualizar estes termos. Em caso de mudanças relevantes, você será informado por e-mail com antecedência razoável. Continuar usando o serviço após a atualização implica aceitar os novos termos.</p>
+
+    <h2>10. Lei aplicável</h2>
+    <p>Estes termos são regidos pela legislação brasileira, incluindo o Código de Defesa do Consumidor (Lei 8.078/1990) e a Lei Geral de Proteção de Dados (Lei 13.709/2018 — LGPD). Fica eleito o foro da comarca do Brasil para resolução de disputas.</p>
+
+    <h2>11. Contato</h2>
+    <p>Dúvidas sobre estes termos: <strong>[INSERIR E-MAIL DE CONTATO]</strong></p>
+
+    <p style="margin-top:2.5rem;"><a href="/" class="legal-back">← Voltar para o início</a></p>
+</div>
+
+</body>
+</html>

@@ -58,6 +58,22 @@
             </div>
         </label>
 
+        <label class="auth-field auth-field-checkbox">
+            <input
+                type="checkbox"
+                name="aceitar_termos"
+                id="aceitar_termos"
+                required
+                style="width:auto;margin-right:0.5rem;accent-color:var(--petrol,#0e7490);"
+            >
+            <span style="font-size:0.875rem;line-height:1.5;">
+                Li e aceito os
+                <a href="{{ url_for('legal.termos') }}" target="_blank" rel="noopener">Termos de Uso</a>
+                e a
+                <a href="{{ url_for('legal.privacidade') }}" target="_blank" rel="noopener">Política de Privacidade</a>.
+            </span>
+        </label>
+
         <button type="submit" class="btn">Criar conta</button>
     </form>
 

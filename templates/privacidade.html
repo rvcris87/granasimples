@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Política de Privacidade - GranaSimples</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script src="{{ url_for('static', filename='js/theme.js') }}"></script>
+    <style>
+        .legal-container {
+            max-width: 760px;
+            margin: 0 auto;
+            padding: 2.5rem 1.5rem 4rem;
+        }
+        .legal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 2.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--border, #e2e8f0);
+        }
+        .legal-back {
+            font-size: 0.875rem;
+            color: var(--muted, #64748b);
+            text-decoration: none;
+        }
+        .legal-back:hover { text-decoration: underline; }
+        .legal-container h1 {
+            font-size: 1.75rem;
+            font-weight: 700;
+            margin-bottom: 0.25rem;
+        }
+        .legal-container h2 {
+            font-size: 1.125rem;
+            font-weight: 600;
+            margin: 2rem 0 0.5rem;
+        }
+        .legal-container p, .legal-container li {
+            font-size: 0.9375rem;
+            line-height: 1.75;
+            color: var(--text, #0f172a);
+        }
+        .legal-container ul {
+            padding-left: 1.25rem;
+            margin: 0.5rem 0 1rem;
+        }
+        .legal-meta {
+            font-size: 0.8125rem;
+            color: var(--muted, #64748b);
+            margin-bottom: 2rem;
+        }
+        .legal-aviso {
+            background: var(--surface, #f1f5f9);
+            border-left: 4px solid var(--petrol, #0e7490);
+            padding: 0.875rem 1rem;
+            border-radius: 0 6px 6px 0;
+            margin: 1.5rem 0;
+            font-size: 0.875rem;
+        }
+    </style>
+</head>
+<body>
+
+<div class="legal-container">
+    <div class="legal-header">
+        <a href="{{ url_for('home') }}" class="brand-lockup">
+            <span class="brand-mark">G</span>
+            <span>GranaSimples</span>
+        </a>
+        <div style="display:flex;align-items:center;gap:1rem;">
+            <a href="/" class="legal-back">← Voltar</a>
+            <button class="theme-toggle" type="button" data-theme-toggle aria-label="Alternar tema">
+                <span class="theme-icon-moon">☾</span>
+                <span class="theme-icon-sun">☀</span>
+            </button>
+        </div>
+    </div>
+
+    <h1>Política de Privacidade</h1>
+    <p class="legal-meta">Última atualização: maio de 2026</p>
+
+    <div class="legal-aviso">
+        Esta política explica de forma clara quais dados o GranaSimples coleta, para que serve cada dado e quais são os seus direitos como usuário.
+    </div>
+
+    <h2>1. Quem somos</h2>
+    <p>O GranaSimples é uma aplicação de controle financeiro pessoal. Nosso objetivo é ajudar você a organizar suas finanças de forma simples, segura e privada.</p>
+
+    <h2>2. Quais dados coletamos</h2>
+    <p>Coletamos apenas o necessário para o funcionamento do serviço:</p>
+    <ul>
+        <li><strong>Nome:</strong> para personalizar sua experiência.</li>
+        <li><strong>E-mail:</strong> para identificação da conta e comunicação.</li>
+        <li><strong>Senha:</strong> armazenada exclusivamente como hash criptográfico (PBKDF2-SHA256). Nunca armazenamos sua senha em texto legível.</li>
+        <li><strong>Dados financeiros inseridos por você:</strong> transações, categorias, metas financeiras, gastos fixos e movimentações. Esses dados pertencem a você e são inseridos voluntariamente.</li>
+    </ul>
+    <p>Não coletamos dados de localização, comportamento de navegação fora do app, dados de dispositivo, endereço físico ou qualquer informação não listada acima.</p>
+
+    <h2>3. Para que usamos seus dados</h2>
+    <ul>
+        <li>Autenticar seu acesso à conta.</li>
+        <li>Exibir seu painel financeiro pessoal.</li>
+        <li>Gerar relatórios, análises e previsões com base nos dados que você inseriu.</li>
+        <li>Proteger sua conta contra acessos não autorizados (controle de tentativas de login).</li>
+    </ul>
+    <p>Não usamos seus dados para anúncios, perfis de crédito ou qualquer finalidade além das listadas acima.</p>
+
+    <h2>4. Compartilhamento de dados</h2>
+    <p><strong>Seus dados não serão vendidos, alugados ou compartilhados com terceiros para fins comerciais.</strong></p>
+    <p>Utilizamos infraestrutura de banco de dados em nuvem (Supabase/PostgreSQL) para armazenar os dados com segurança. Esses provedores atuam estritamente como processadores de dados e estão sujeitos às suas próprias políticas de privacidade.</p>
+
+    <h2>5. Segurança</h2>
+    <p>Adotamos práticas técnicas de segurança, incluindo:</p>
+    <ul>
+        <li>Hash de senhas com algoritmo seguro.</li>
+        <li>Proteção contra ataques de força bruta no login.</li>
+        <li>Isolamento completo de dados entre usuários diferentes.</li>
+        <li>Proteção CSRF em todos os formulários.</li>
+        <li>Cookies seguros com HttpOnly e expiração de sessão.</li>
+    </ul>
+    <p>Nenhum sistema é 100% seguro. Em caso de incidente que afete seus dados, você será notificado por e-mail o mais breve possível.</p>
+
+    <h2>6. Seus direitos (LGPD — Art. 18)</h2>
+    <p>Como titular de dados, você tem direito a:</p>
+    <ul>
+        <li><strong>Acesso:</strong> saber quais dados temos sobre você.</li>
+        <li><strong>Correção:</strong> solicitar a correção de dados incorretos.</li>
+        <li><strong>Exclusão:</strong> pedir a exclusão da sua conta e dos seus dados.</li>
+        <li><strong>Portabilidade:</strong> solicitar a exportação dos seus dados em formato legível.</li>
+        <li><strong>Revogação:</strong> retirar seu consentimento a qualquer momento.</li>
+    </ul>
+    <p>Enquanto as funções automáticas de exportação e exclusão de conta estão em desenvolvimento, todas as solicitações podem ser enviadas por e-mail para <strong>[INSERIR E-MAIL DE CONTATO]</strong> e serão atendidas manualmente em até 15 dias úteis.</p>
+
+    <h2>7. Retenção de dados</h2>
+    <p>Seus dados são mantidos enquanto sua conta estiver ativa. Após a exclusão da conta, os dados serão removidos ou anonimizados no prazo de 30 dias, salvo obrigação legal de retenção.</p>
+
+    <h2>8. Contato</h2>
+    <p>Para exercer seus direitos ou tirar dúvidas sobre privacidade, entre em contato:</p>
+    <p><strong>E-mail:</strong> [INSERIR E-MAIL DE CONTATO]</p>
+
+    <h2>9. Alterações nesta política</h2>
+    <p>Esta política pode ser atualizada. Em caso de mudanças relevantes, você será informado por e-mail ou por aviso no painel. A data de atualização no topo desta página sempre refletirá a versão mais recente.</p>
+
+    <p style="margin-top:2.5rem;"><a href="/" class="legal-back">← Voltar para o início</a></p>
+</div>
+
+</body>
+</html>

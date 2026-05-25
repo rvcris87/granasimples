@@ -9,6 +9,7 @@ from routes.transacoes import transacoes_bp
 from routes.metas import metas_bp
 from routes.categorias import categorias_bp
 from routes.gastos_fixos import gastos_fixos_bp
+from routes.legal import legal_bp
 
 __all__ = [
     'auth_bp',
@@ -17,4 +18,5 @@ __all__ = [
     'metas_bp',
     'categorias_bp',
     'gastos_fixos_bp',
+    'legal_bp',
 ]
