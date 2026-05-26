@@ -67,10 +67,10 @@
             {% endif %}
 
             <header class="topbar">
-                <div>
+                <div class="topbar-text">
                     <p class="section-eyebrow">Painel financeiro</p>
                     <h1>Olá, {{ nome }}</h1>
-                    <p>Seu dinheiro organizado em áreas claras para decidir melhor, sem perder a leveza do GranaSimples.</p>
+                    <p>Seu histórico organizado e suas metas sempre à vista.</p>
                 </div>
 
                 <div class="topbar-actions">
@@ -87,15 +87,15 @@
                 {% set reservado_metas = (metas | sum(attribute='valor_atual') | float) if metas else 0.0 %}
                 <div class="section-heading">
                     <div>
-                        <p class="section-eyebrow">Visão geral</p>
-                        <h2 id="titulo-visao-geral">Como está meu mês?</h2>
+                        <p class="section-eyebrow">Visão geral — {{ mes or "mês atual" }}</p>
+                        <h2 id="titulo-visao-geral">Resumo financeiro</h2>
                     </div>
                     <a href="#transacoes" class="btn btn-secundario" data-section-link="transacoes"><i class="fa-solid fa-plus"></i> Nova transação</a>
                 </div>
 
                 <section class="resumo-cards" aria-label="Resumo financeiro">
                     <article class="finance-card saldo-card destaque-card">
-                        <span>Saldo disponível atual</span>
+                        <span>Saldo disponível</span>
                         <strong class="{% if saldo_disponivel < 0 %}saida{% endif %}">R$ {{ "%.2f"|format(saldo_disponivel or 0) }}</strong>
 
                         <div class="saldo-calculo">
@@ -105,42 +105,39 @@
                             </div>
                             <div class="saldo-calculo-linha">
                                 <div class="saldo-calculo-label is-muted">Reservado em metas:</div>
-                                <div class="saldo-calculo-valor is-muted">- R$ {{ "%.2f"|format(reservado_metas or 0) }}</div>
+                                <div class="saldo-calculo-valor is-muted">− R$ {{ "%.2f"|format(reservado_metas or 0) }}</div>
                             </div>
                         </div>
 
                         {% if saldo_disponivel < 0 %}
-                        <small class="saldo-alerta-negativo">
-                            ⚠️ Saldo negativo: o total reservado em metas supera o acumulado histórico.
-                        </small>
+                        <small class="saldo-alerta-negativo">⚠️ Reservas excedem o saldo histórico acumulado.</small>
                         {% else %}
-                        <small>Considera todo o histórico menos reservas em metas.</small>
+                        <small>Histórico acumulado menos o total reservado em metas.</small>
                         {% endif %}
                     </article>
+
                     <article class="finance-card meta-card">
                         <span>Resultado do mês</span>
                         <strong class="{% if resultado_mes < 0 %}saida{% endif %}">R$ {{ "%.2f"|format(resultado_mes or 0) }}</strong>
-                        <small>Entradas menos saídas em {{ mes or "mês atual" }}</small>
+                        <small>{{ mes or "mês atual" }}</small>
                     </article>
+
                     <article class="finance-card entrada-card">
                         <span>Entradas</span>
                         <strong>R$ {{ "%.2f"|format(total_entradas or 0) }}</strong>
-                        <small>Receitas registradas no período</small>
+                        <small>Receitas no período</small>
                     </article>
+
                     <article class="finance-card saida-card">
                         <span>Saídas</span>
                         <strong>R$ {{ "%.2f"|format(total_saidas or 0) }}</strong>
-                        <small>Despesas lançadas no período</small>
+                        <small>Despesas lançadas</small>
                     </article>
+
                     <article class="finance-card meta-card">
                         <span>Gastos fixos</span>
                         <strong>R$ {{ "%.2f"|format(total_gastos_fixos or 0) }}</strong>
-                        <small>{{ "%.1f"|format(percentual_gastos_fixos or 0) }}% das saídas do mês</small>
-                    </article>
-                    <article class="finance-card meta-card">
-                        <span>Reservado em metas</span>
-                        <strong>R$ {{ "%.2f"|format(reservado_metas or 0) }}</strong>
-                        <small>Total guardado nas metas ativas</small>
+                        <small>{{ "%.1f"|format(percentual_gastos_fixos or 0) }}% das saídas</small>
                     </article>
                 </section>
                 <section class="insights-curtos" aria-label="Resumo rápido do mês">
@@ -734,6 +731,16 @@
                         </div>
                         <button class="btn" type="button" data-theme-toggle><i class="fa-solid fa-circle-half-stroke"></i> Alternar tema</button>
                     </section>
+                    <section class="painel-card">
+                        <div class="painel-card-header">
+                            <div>
+                                <h2>Privacidade (LGPD)</h2>
+                                <p>Baixe uma cópia completa de suas informações e histórico financeiro.</p>
+                            </div>
+                            <span class="card-icon"><i class="fa-solid fa-download"></i></span>
+                        </div>
+                        <a href="{{ url_for('auth.exportar_dados') }}" class="btn" style="text-decoration:none; display:inline-flex; align-items:center; justify-content:center; gap:0.5rem; width:100%; height:38px;"><i class="fa-solid fa-download"></i> Exportar meus dados</a>
+                    </section>
                 </div>
             </section>
 
@@ -746,6 +753,132 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>
 <script src="{{ url_for('static', filename='js/dashboard.js') }}" defer></script>
 <script src="{{ url_for('static', filename='js/prevenir-duplo-clique.js') }}" defer></script>
+
+{% if mostrar_consentimento %}
+<div id="consentimento-lgpd-modal" class="lgpd-overlay">
+    <div class="lgpd-modal">
+        <div class="lgpd-header">
+            <i class="fa-solid fa-shield-halved lgpd-icon"></i>
+            <h2>Privacidade e Termos de Uso</h2>
+        </div>
+        <div class="lgpd-body">
+            <p>
+                Para continuar utilizando o <strong>GranaSimples</strong>, precisamos que você leia e concorde com a nossa 
+                <a href="{{ url_for('legal.privacidade') }}" target="_blank">Política de Privacidade</a> e nossos 
+                <a href="{{ url_for('legal.termos') }}" target="_blank">Termos de Uso</a>.
+            </p>
+            <p>
+                Garantimos a transparência no tratamento de seus dados financeiros (transações, metas, categorias) 
+                e garantimos que suas informações nunca serão vendidas ou compartilhadas com terceiros.
+            </p>
+        </div>
+        <div class="lgpd-footer">
+            <form method="POST" action="{{ url_for('auth.registrar_consentimento') }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit" class="btn btn-principal btn-lgpd">Li e aceito os termos</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+.lgpd-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(15, 23, 42, 0.85);
+    backdrop-filter: blur(8px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 99999;
+}
+
+.lgpd-modal {
+    background-color: var(--card-bg, #ffffff);
+    color: var(--text-primary, #1e293b);
+    max-width: 480px;
+    width: 90%;
+    padding: 2.5rem;
+    border-radius: 16px;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3), 0 10px 10px -5px rgba(0, 0, 0, 0.2);
+    border: 1px solid var(--border-color, #e2e8f0);
+    animation: lgpd-fade-in 0.3s ease-out;
+}
+
+.lgpd-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.lgpd-icon {
+    font-size: 2rem;
+    color: #3b82f6;
+}
+
+.lgpd-header h2 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin: 0;
+}
+
+.lgpd-body p {
+    font-size: 0.95rem;
+    line-height: 1.6;
+    margin-bottom: 1.25rem;
+    color: var(--text-secondary, #64748b);
+}
+
+.lgpd-body a {
+    color: #3b82f6;
+    text-decoration: underline;
+    font-weight: 600;
+}
+
+.lgpd-body a:hover {
+    color: #2563eb;
+}
+
+.lgpd-footer {
+    margin-top: 2rem;
+}
+
+.btn-lgpd {
+    width: 100%;
+    height: 48px;
+    font-size: 1rem;
+    font-weight: 600;
+    background-color: #3b82f6;
+    color: #ffffff;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn-lgpd:hover {
+    background-color: #2563eb;
+}
+
+@keyframes lgpd-fade-in {
+    from {
+        opacity: 0;
+        transform: scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+</style>
+{% endif %}
 
 </body>
 </html>

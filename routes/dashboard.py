@@ -22,6 +22,7 @@ from utils import (
 )
 from db import conectar, DatabaseConfigError
 
+
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
@@ -33,6 +34,7 @@ dashboard_bp = Blueprint("dashboard", __name__)
 def app_dashboard():
     usuario_id = session["usuario_id"]
     mes = request.args.get("mes", "").strip()
+    mostrar_consentimento = False
 
     if not mes:
         mes = date.today().strftime("%Y-%m")
@@ -64,6 +66,12 @@ def app_dashboard():
         inteligencia = obter_inteligencia_financeira(usuario_id, mes_referencia=mes, conn=conn)
         dados_globais = calcular_saldo_global(usuario_id, conn=conn)
         transacoes_recentes = buscar_transacoes_recentes(usuario_id, limite=20, conn=conn)
+
+        # Verificar se o usuário já aceitou os termos de LGPD
+        cur = conn.cursor()
+        cur.execute("SELECT consentimento_termos_em FROM usuarios WHERE id = %s", (usuario_id,))
+        usuario_res = cur.fetchone()
+        mostrar_consentimento = (usuario_res and usuario_res["consentimento_termos_em"] is None)
 
         try:
             uso_categorias = buscar_uso_categorias(usuario_id, conn=conn)
@@ -107,6 +115,7 @@ def app_dashboard():
 
     return render_template(
         "index.html",
+        mostrar_consentimento=mostrar_consentimento,
         nome=session.get("usuario_nome", "Usuário"),
         transacoes=dados.get("transacoes", []),
         transacoes_recentes=transacoes_recentes,

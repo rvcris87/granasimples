@@ -169,3 +169,125 @@ def register():
 def logout():
     session.clear()
     return redirect(url_for("home"))
+
+
+@auth_bp.route("/exportar-dados", methods=["GET"])
+@login_required
+def exportar_dados():
+    import decimal
+    import datetime
+    import json
+    from flask import Response
+
+    usuario_id = session["usuario_id"]
+    conn = None
+    try:
+        conn = conectar()
+        cur = conn.cursor()
+
+        def serialize_data(val):
+            if isinstance(val, (datetime.datetime, datetime.date)):
+                return val.isoformat()
+            if isinstance(val, decimal.Decimal):
+                return float(val)
+            return val
+
+        def format_rows(rows):
+            return [{k: serialize_data(v) for k, v in row.items()} for row in rows]
+
+        cur.execute("""
+            SELECT id, nome, email, created_at, consentimento_termos_em
+            FROM usuarios
+            WHERE id = %s
+        """, (usuario_id,))
+        usuario_info = cur.fetchone()
+
+        if not usuario_info:
+            return "Usuário não encontrado.", 404
+
+        export_data = {
+            "perfil": {k: serialize_data(v) for k, v in usuario_info.items()},
+            "exportado_em": datetime.datetime.now().isoformat(),
+            "dados": {}
+        }
+
+        cur.execute("""
+            SELECT id, nome, tipo
+            FROM categorias
+            WHERE usuario_id = %s
+            ORDER BY nome
+        """, (usuario_id,))
+        export_data["dados"]["categorias"] = format_rows(cur.fetchall())
+
+        cur.execute("""
+            SELECT id, descricao, valor, tipo, data, categoria_id, meta_id, gasto_fixo_id
+            FROM transacoes
+            WHERE usuario_id = %s
+            ORDER BY data DESC
+        """, (usuario_id,))
+        export_data["dados"]["transacoes"] = format_rows(cur.fetchall())
+
+        cur.execute("""
+            SELECT id, titulo, valor_meta, valor_atual, arquivada_em, created_at, ativo
+            FROM metas
+            WHERE usuario_id = %s
+            ORDER BY created_at DESC
+        """, (usuario_id,))
+        export_data["dados"]["metas"] = format_rows(cur.fetchall())
+
+        cur.execute("""
+            SELECT id, meta_id, tipo, valor, observacao, criado_em
+            FROM meta_movimentacoes
+            WHERE usuario_id = %s
+            ORDER BY criado_em DESC
+        """, (usuario_id,))
+        export_data["dados"]["meta_movimentacoes"] = format_rows(cur.fetchall())
+
+        cur.execute("""
+            SELECT id, descricao, valor, dia_vencimento, ativo, created_at
+            FROM gastos_fixos
+            WHERE usuario_id = %s
+            ORDER BY dia_vencimento
+        """, (usuario_id,))
+        export_data["dados"]["gastos_fixos"] = format_rows(cur.fetchall())
+
+        json_data = json.dumps(export_data, indent=2, ensure_ascii=False)
+        filename = f"granasimples_dados_usuario_{usuario_id}.json"
+
+        return Response(
+            json_data,
+            mimetype="application/json",
+            headers={"Content-disposition": f"attachment; filename={filename}"}
+        )
+
+    except Exception as e:
+        logger.exception(f"Erro ao exportar dados do usuário {usuario_id}: {e}")
+        return "Não foi possível exportar seus dados. Tente novamente mais tarde.", 500
+    finally:
+        if conn:
+            conn.close()
+
+
+@auth_bp.route("/registrar-consentimento", methods=["POST"])
+@login_required
+def registrar_consentimento():
+    usuario_id = session["usuario_id"]
+    conn = None
+    try:
+        conn = conectar()
+        cur = conn.cursor()
+        cur.execute("""
+            UPDATE usuarios
+            SET consentimento_termos_em = NOW()
+            WHERE id = %s
+        """, (usuario_id,))
+        conn.commit()
+    except Exception as e:
+        logger.exception(f"Erro ao registrar consentimento do usuário {usuario_id}: {e}")
+        return "Não foi possível salvar o consentimento. Tente novamente.", 500
+    finally:
+        if conn:
+            conn.close()
+
+    return redirect(url_for("dashboard.app_dashboard"))
+
