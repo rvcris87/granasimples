@@ -23,6 +23,9 @@ secret_key = os.getenv("SECRET_KEY", "").strip()
 debug_mode = os.getenv("FLASK_DEBUG", "False").lower() == "true"
 is_production = os.getenv("FLASK_ENV", "").lower() == "production"
 
+if is_production:
+    debug_mode = False
+
 if not secret_key:
     if is_production:
         raise RuntimeError("SECRET_KEY deve ser configurada em produção.")
@@ -32,6 +35,7 @@ if is_production and secret_key == "granasimples_secret_key":
     raise RuntimeError("SECRET_KEY padrão não pode ser usada em produção.")
 
 app.secret_key = secret_key
+app.config["DEBUG"] = debug_mode
 
 csrf = CSRFProtect(app)
 

@@ -63,3 +63,9 @@ logs/
 # OS
 .DS_Store
 Thumbs.db
+
+# Agent and temporary/scratch files
+.agent/
+.gemini/
+scratch/
+temp/
